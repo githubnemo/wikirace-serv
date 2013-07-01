@@ -120,6 +120,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	serveWikiPage(host, page, w)
 }
 
+// Debug output of session values
 func visitsHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
 
@@ -129,6 +130,22 @@ func visitsHandler(w http.ResponseWriter, r *http.Request) {
 		session.Values["opponent"])
 }
 
+// start game session
+// params:
+// - your name
+// - opponent name
+//
+// sets
+// - start page
+// - end page
+func startHandler(w http.ResponseWriter, r *http.Request) {
+	defer errorHandler(w, r)
+
+    session, _ := store.Get(r, "game")
+
+	// TODO
+	fmt.Println(session)
+}
 
 // Serves initial page
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -153,6 +170,7 @@ func main() {
 	http.HandleFunc("/visit", visitHandler)
 	http.HandleFunc("/visits", visitsHandler)
 	http.HandleFunc("/serve", visitHandler)
+	http.HandleFunc("/start", startHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
