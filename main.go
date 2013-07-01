@@ -56,7 +56,20 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 		setAttributeValue(e.Nodes[0], "href", serviceVisitUrl(wpUrl.Host, page))
 	})
 
-	return doc.Find("#bodyContent").Html()
+	content, err := doc.Find("#bodyContent").Html()
+
+	if err != nil {
+		return "", err
+	}
+
+	header, err := doc.Find("head").Html()
+
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf(`<html><head>%s</head><body>%s</body></html>`,
+		header, content), nil
 }
 
 func errorHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +89,7 @@ func serveWikiPage(host, page string, w http.ResponseWriter) {
 		panic(err)
 	}
 
-	fmt.Fprintf(w, content)
+	w.Write([]byte(content))
 }
 
 // Accepts visits and serves new wiki page
