@@ -6,13 +6,16 @@ import (
 	"strings"
 	"net/url"
 	"net/http"
+	"runtime/debug"
 	"github.com/PuerkitoBio/goquery"
 	"code.google.com/p/go.net/html"
-	"github.com/gorilla/sessions"
 )
 
-var encryptionKey = "lirumlarum"
-var store = sessions.NewCookieStore([]byte(encryptionKey))
+// Initialized in main()
+var (
+	session *GameSessionStore
+	gameStore *Store
+)
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
 	for i, a := range n.Attr {
@@ -74,7 +77,22 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 
 func errorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
-		fmt.Fprintf(w, "Error: %s\n", err)
+		w.WriteHeader(401)
+
+		fmt.Fprintf(w,"Oh...:(\n\n")
+
+		if e,ok := err.(error); ok {
+			w.Write([]byte(e.Error()))
+			w.Write([]byte{'\n','\n'})
+			w.Write(debug.Stack())
+		} else {
+			fmt.Fprintf(w, "%s\n\n%s\n", err, debug.Stack())
+		}
+
+		log.Println(
+			"panic catched:", err,
+			"\nRequest data:", r,
+			"\nStack:", string(debug.Stack()))
 	}
 }
 
@@ -105,29 +123,27 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	host := values.Get("host")
 	page := values.Get("page")
 
-    session, _ := store.Get(r, "game")
+    session, _ := session.GetGameSession(r)
 
-	if i, ok := session.Values["visits"].(int); !ok {
-		session.Values["visits"] = 1
-	} else {
-		session.Values["visits"] = i + 1
+	game, err := getGameByHash(session.GameHash())
+
+	if err != nil {
+		panic(err)
 	}
 
-	session.Values["opponent"] = "someName"
+	if len(game.Winner) == 0 && page == game.Goal {
+		// We have a winner.
+		game.Winner = session.PlayerName()
 
+		fmt.Fprintf(w, "u win o.o")
+		return
+	}
+
+	session.Visited(page)
     session.Save(r, w)
 
+	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	serveWikiPage(host, page, w)
-}
-
-// Debug output of session values
-func visitsHandler(w http.ResponseWriter, r *http.Request) {
-	defer errorHandler(w, r)
-
-    session, _ := store.Get(r, "game")
-
-	fmt.Fprintf(w, "visits: %d, opponent: %s\n", session.Values["visits"],
-		session.Values["opponent"])
 }
 
 // start game session
@@ -141,36 +157,96 @@ func visitsHandler(w http.ResponseWriter, r *http.Request) {
 func startHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
 
-    session, _ := store.Get(r, "game")
+	values, err := url.ParseQuery(r.URL.RawQuery)
 
-	// TODO
-	fmt.Println(session)
+	if err != nil {
+		panic(err)
+	}
+
+	playerName := values.Get("playerName")
+
+	// FIXME: overwrites running game
+
+	game := NewGame(playerName)
+
+	err = gameStore.PutMarshal(game.Hash(), game)
+
+	if err != nil {
+		panic(err)
+	}
+
+	session, err := session.GetGameSession(r)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: kill previous game with hash `session.Values["hash"]`
+
+	session.Init(playerName, game.Hash())
+
+	// Everything went well, tell him he shall go to the game session.
+	// The URL to the game shall be shareable.
+	http.Redirect(w, r, "/game?id=" + game.Hash(), 300)
 }
 
-// Serves initial page
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+// Serve game content
+func gameHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
+
+	// TODO: handle join (unknown player)
 
 	wikiUrl := "/visit?page=jQuery&host=de.wikipedia.org"
 	doc := `
 <html>
-	<iframe src="%s"></iframe>
+	<iframe name="gameFrame" width="50%%" height="50%%" src="%s"></iframe>
 	%q
 </html>
 `
 	fmt.Fprintf(w, doc, wikiUrl, html.EscapeString(r.URL.Path))
 }
 
+// Serves initial page
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	defer errorHandler(w, r)
+
+	doc := `
+<html>
+	Start new game:
+	<form method="get" action="/start">
+		<label for="playerName">Player name:</label>
+		<input type="text" name="playerName">
+		<input type="submit">
+	</form>
+	%q
+</html>
+`
+	fmt.Fprintf(w, doc, html.EscapeString(r.URL.Path))
+}
+
 // TODO: send new visit and visit of opponent to website
 
+// Game initialization:
+//
+// foo goes to: /start?player=foo
+// game creates link: /game?id=<uniqGameHash(foo)>
+//
+// Participation:
+//
+// bar goes to: /game?id=<uniqGameHash(foo)>
+// server knows: this is not foo or a playing player, ask for name
+// bar enters name: bar
+// server registers player bar in game
+
 func main() {
-//	serveWikiUrl("http://de.wikipedia.org/wiki/jQuery")
+	session = NewGameSessionStore()
+
+	gameStore = NewStore("./games")
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/visit", visitHandler)
-	http.HandleFunc("/visits", visitsHandler)
-	http.HandleFunc("/serve", visitHandler)
 	http.HandleFunc("/start", startHandler)
+	http.HandleFunc("/game", gameHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
