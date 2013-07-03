@@ -30,6 +30,18 @@ func (s *GameSession) Init(player, game string) {
 	s.Values["hash"] = game
 	s.Values["name"] = player
 	s.Values["visits"] = []string{}
+	s.Values["initialized"] = true
+}
+
+// Method to check whether the session was initialized properly
+// and is generally safe to use.
+func (s *GameSession) IsInitialized() bool {
+	if _, ok := s.Values["initialized"]; ok {
+		if v, ok := s.Values["initialized"].(bool); ok {
+			return v
+		}
+	}
+	return false
 }
 
 func (s *GameSession) PlayerName() string {
@@ -46,4 +58,8 @@ func (s *GameSession) Visited(page string) {
 	visits = append(visits, page)
 
 	s.Values["visits"] = visits
+}
+
+func (s *GameSession) GetGame() (*Game, error) {
+	return getGameByHash(s.GameHash())
 }

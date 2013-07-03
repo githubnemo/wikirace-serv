@@ -34,6 +34,10 @@ func serviceVisitUrl(wpHost, page string) string {
 	return "/visit?page=" + page + "&host=" + wpHost
 }
 
+func trimPageName(path string) string {
+	return path[len("/wiki/"):]
+}
+
 func rewriteWikiUrls(wikiUrl string) (string, error) {
 	doc, err := goquery.NewDocument(wikiUrl)
 
@@ -54,7 +58,7 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 			return
 		}
 
-		page := link[len("/wiki/"):]
+		page := trimPageName(link)
 
 		setAttributeValue(e.Nodes[0], "href", serviceVisitUrl(wpUrl.Host, page))
 	})
@@ -96,10 +100,6 @@ func errorHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func panicOnError(err error) {
-	panic(err)
-}
-
 func serveWikiPage(host, page string, w http.ResponseWriter) {
 	content, err := rewriteWikiUrls("http://" + host + "/wiki/" + page)
 
@@ -108,6 +108,28 @@ func serveWikiPage(host, page string, w http.ResponseWriter) {
 	}
 
 	w.Write([]byte(content))
+}
+
+// Fetch two random pages from wikipedia and get the corresponding
+// page titles which will then represent the start and the goal of the game.
+func determineStartAndGoal() (string, string, error) {
+	const wpRandomUrl = "http://de.wikipedia.org/wiki/Spezial:Zuf%C3%A4llige_Seite"
+
+	sresp, err := http.Head(wpRandomUrl)
+
+	if err != nil {
+		return "", "", err
+	}
+
+	gresp, err := http.Head(wpRandomUrl)
+
+	if err != nil {
+		return "", "", err
+	}
+
+	return trimPageName(sresp.Request.URL.Path),
+		   trimPageName(gresp.Request.URL.Path),
+		   nil
 }
 
 // Accepts visits and serves new wiki page
@@ -123,35 +145,40 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	host := values.Get("host")
 	page := values.Get("page")
 
-    session, _ := session.GetGameSession(r)
+    session, err := session.GetGameSession(r)
 
-	game, err := getGameByHash(session.GameHash())
+	if err != nil || !session.IsInitialized() {
+		panic(fmt.Errorf("Invalid session, sorry :/ (Error: %v)", err))
+	}
+
+	game, err := session.GetGame()
 
 	if err != nil {
 		panic(err)
 	}
 
+	// FIXME: this could be racy
 	if len(game.Winner) == 0 && page == game.Goal {
 		// We have a winner.
 		game.Winner = session.PlayerName()
 
-		fmt.Fprintf(w, "u win o.o")
+		fmt.Fprintf(w, "u win \\o/")
 		return
 	}
 
 	session.Visited(page)
     session.Save(r, w)
 
-	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	serveWikiPage(host, page, w)
+	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
+	fmt.Fprintf(w, "Game dump: %#v\n", game)
 }
 
 // start game session
 // params:
 // - your name
-// - opponent name
 //
-// sets
+// sets randomly
 // - start page
 // - end page
 func startHandler(w http.ResponseWriter, r *http.Request) {
@@ -169,6 +196,15 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	game := NewGame(playerName)
 
+	start, goal, err := determineStartAndGoal()
+
+	if err != nil {
+		panic(err)
+	}
+
+	game.Start = start
+	game.Goal = goal
+
 	err = gameStore.PutMarshal(game.Hash(), game)
 
 	if err != nil {
@@ -184,6 +220,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: kill previous game with hash `session.Values["hash"]`
 
 	session.Init(playerName, game.Hash())
+	session.Save(r, w)
 
 	// Everything went well, tell him he shall go to the game session.
 	// The URL to the game shall be shareable.
@@ -196,14 +233,25 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: handle join (unknown player)
 
-	wikiUrl := "/visit?page=jQuery&host=de.wikipedia.org"
+	session, err := session.GetGameSession(r)
+
+	if err != nil {
+		panic(err)
+	}
+
+	game, err := session.GetGame()
+
+	if err != nil {
+		panic(err)
+	}
+
+	wikiUrl := "/visit?page=" + game.Start + "&host=de.wikipedia.org"
 	doc := `
 <html>
 	<iframe name="gameFrame" width="50%%" height="50%%" src="%s"></iframe>
-	%q
 </html>
 `
-	fmt.Fprintf(w, doc, wikiUrl, html.EscapeString(r.URL.Path))
+	fmt.Fprintf(w, doc, wikiUrl)
 }
 
 // Serves initial page
