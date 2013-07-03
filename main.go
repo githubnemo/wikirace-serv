@@ -227,13 +227,20 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/game?id=" + game.Hash(), 300)
 }
 
+func playerJoinHandler(session *GameSession, w http.ResponseWriter, r *http.Request) {
+	// TODO: dialog and session setting
+}
+
 // Serve game content
 func gameHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
 
-	// TODO: handle join (unknown player)
-
 	session, err := session.GetGameSession(r)
+
+	if !session.IsInitialized() {
+		playerJoinHandler(session, w, r)
+		return
+	}
 
 	if err != nil {
 		panic(err)
