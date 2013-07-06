@@ -6,6 +6,7 @@ import (
 	"strings"
 	"net/url"
 	"net/http"
+	"html/template"
 	"runtime/debug"
 	"github.com/PuerkitoBio/goquery"
 	"code.google.com/p/go.net/html"
@@ -15,6 +16,7 @@ import (
 var (
 	session *GameSessionStore
 	gameStore *Store
+	templates *template.Template
 )
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
@@ -258,17 +260,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	playerName := values.Get("name")
 
 	if len(playerName) == 0 {
-		doc := `
-<html>
-	<form method="get">
-		<label for="name">Enter your name</label>
-		<input type="hidden" name="id" value="%s">
-		<input type="text" name="name">
-		<input type="submit">
-	</form>
-</html>
-`
-		fmt.Fprintf(w, doc, gameId)
+		templates.ExecuteTemplate(w, "join.html", gameId)
 		return
 	}
 
@@ -324,34 +316,19 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wikiUrl := "/visit?page=" + game.Start + "&host=de.wikipedia.org"
-	doc := `
-<html>
-	Start: %s<br>
-	Goal: %s<br>
-	<h3>Summary of goal page:</h3>
-	<p>%s</p>
-	<iframe name="gameFrame" width="50%%" height="50%%" src="%s"></iframe>
-</html>
-`
-	fmt.Fprintf(w, doc, game.Start, game.Goal, summary, wikiUrl)
+
+	templates.ExecuteTemplate(w, "game.html", struct{
+		Game *Game
+		Summary string
+		WikiURL string
+	}{game, summary, wikiUrl})
 }
 
 // Serves initial page
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
 
-	doc := `
-<html>
-	Start new game:
-	<form method="get" action="/start">
-		<label for="playerName">Player name:</label>
-		<input type="text" name="playerName">
-		<input type="submit">
-	</form>
-	%q
-</html>
-`
-	fmt.Fprintf(w, doc, html.EscapeString(r.URL.Path))
+	templates.ExecuteTemplate(w, "index.html", nil)
 }
 
 // TODO: send new visit and visit of opponent to website
@@ -370,6 +347,13 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	session = NewGameSessionStore()
+
+	var err error
+	templates, err = templates.ParseGlob("templates/*")
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	gameStore = NewStore("./games")
 
