@@ -4,6 +4,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"log"
 	"net/http"
+	"encoding/json"
 )
 
 const (
@@ -49,9 +50,9 @@ func SockServer(ws *websocket.Conn) {
 	for {
 		select {
 			case msg := <- VisitChannel:
-				log.Println("received", msg.CurrentPage)
+				res, _ := json.Marshal(msg)
 				for cs, _ := range ActiveClients {
-					if err = Message.Send(cs.websocket, msg.CurrentPage); err != nil {
+					if err = Message.Send(cs.websocket, string(res)); err != nil {
 						// we could not send the message to a peer
 						log.Println("Could not send message to ", cs.clientIP, err.Error(), " - dropping client.")
 						delete(ActiveClients, sockCli)
