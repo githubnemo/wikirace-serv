@@ -264,6 +264,17 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	session.Init(playerName, gameId)
 	session.Save(r, w)
 
+	game, err := session.GetGame()
+
+	if err != nil {
+		panic(err)
+	}
+
+	game.AddPlayer(playerName)
+
+	// FIXME: racy
+	game.Save()
+
 	http.Redirect(w, r, "/game?id=" + gameId, 301)
 }
 

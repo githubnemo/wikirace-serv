@@ -36,6 +36,14 @@ func (g *Game) Hash() string {
 	return g.hash
 }
 
+func (g *Game) AddPlayer(name string) {
+	g.PlayerHashes = append(g.PlayerHashes, name)
+}
+
+func (g *Game) Save() error {
+	return gameStore.PutMarshal(g.Hash(), g)
+}
+
 
 // Compute the game hash using the hosting player's name
 func computeGameHash(playerName string) string {
