@@ -19,6 +19,8 @@ var (
 
 func serviceVisitUrl(wpHost, page string) string {
 	// TODO: page = encrypt(page)
+	page = url.QueryEscape(page)
+	wpHost = url.QueryEscape(wpHost)
 	return "/visit?page=" + page + "&host=" + wpHost
 }
 
