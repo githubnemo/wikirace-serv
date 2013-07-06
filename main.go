@@ -208,7 +208,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		summary = err.Error()
 	}
 
-	wikiUrl := "/visit?page=" + game.Start + "&host=de.wikipedia.org"
+	wikiUrl := "/visit?page=" + session.LastVisited() + "&host=de.wikipedia.org"
 
 	templates.ExecuteTemplate(w, "game.html", struct{
 		Game *Game
