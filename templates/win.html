@@ -1,6 +1,14 @@
 <html>
 	<body>
-		<pre>u reached the goal \o/</pre>
+		{{if .IsWinner}}
+			<pre>You're the winner! (for now) \o/</pre>
+		{{else}}
+			<pre>u reached the goal \o/ Sadly, your path was too long.</pre>
+		{{end}}
+
+		{{if not .IsWinner}}
+		Visits of the winner: {{len .Game.WinnerPath}} <br>
+		{{end}}
 
 		Visits in total: {{len .Session.Visits}} <br>
 

@@ -71,14 +71,21 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// FIXME: this could be racy
-	if len(game.Winner) == 0 && page == game.Goal {
-		// We have a winner.
-		game.Winner = session.PlayerName()
+	if page == game.Goal {
+		// He reached the goal
+
+		// This one is the winner (for now)
+		if len(game.WinnerPath) < len(session.Visits()) {
+			game.Winner = session.PlayerName()
+			game.WinnerPath = session.Visits()
+		}
 
 		templates.ExecuteTemplate(w, "win.html", struct{
 			Game *Game
 			Session *GameSession
-		}{game, session})
+			IsWinner bool
+		}{game, session, game.Winner == session.PlayerName()})
+
 		return
 	}
 
@@ -145,6 +152,8 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
+
+	// TODO: dont allow join when there's already a winner
 
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
