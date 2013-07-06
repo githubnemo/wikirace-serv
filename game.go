@@ -40,6 +40,15 @@ func (g *Game) AddPlayer(name string) {
 	g.PlayerHashes = append(g.PlayerHashes, name)
 }
 
+func (g *Game) HasPlayer(name string) bool {
+	for _, e := range g.PlayerHashes {
+		if e == name {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *Game) Save() error {
 	return gameStore.PutMarshal(g.Hash(), g)
 }

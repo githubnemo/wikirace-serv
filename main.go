@@ -166,8 +166,6 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 func joinHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
 
-	// TODO: dont allow join when there's already a winner
-
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {
@@ -183,20 +181,29 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if game really exists
-	// TODO
+	if !gameStore.Contains(gameId) {
+		panic("No such game")
+	}
 
-	// Check if player name is not taken
-	// TODO
-
-	session, err := session.GetGameSession(r)
-	session.Init(playerName, gameId)
-	session.Save(r, w)
-
-	game, err := session.GetGame()
+	game, err := getGameByHash(gameId)
 
 	if err != nil {
 		panic(err)
 	}
+
+	// Check if player name is not taken
+	if game.HasPlayer(playerName) {
+		panic("Player name already taken.")
+	}
+
+	// Don't allow join when there's already a winner
+	if len(game.Winner) > 0 {
+		panic("Game is locked as it has already a winner.")
+	}
+
+	session, err := session.GetGameSession(r)
+	session.Init(playerName, gameId)
+	session.Save(r, w)
 
 	game.AddPlayer(playerName)
 
