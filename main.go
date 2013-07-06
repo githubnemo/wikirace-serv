@@ -70,6 +70,9 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	session.Visited(page)
+	session.Save(r, w)
+
 	// FIXME: this could be racy
 	if page == game.Goal {
 		// He reached the goal
@@ -90,9 +93,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	session.Visited(page)
-    session.Save(r, w)
 
 	serveWikiPage(host, page, w)
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
