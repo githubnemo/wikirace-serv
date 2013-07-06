@@ -64,23 +64,4 @@ func getGameByHash(hash string) (*Game, error) {
 	return &game, nil
 }
 
-// Searches for a game hosted by the player with the given name.
-// Returns nil if no game was found.
-func findRunningGame(playerName string) *Game {
-	gameHash := computeGameHash(playerName)
-
-	if !gameStore.Contains(gameHash) {
-		return nil
-	}
-
-	game, err := getGameByHash(gameHash)
-
-	if err != nil {
-		// This should not happen and indicates bad data
-		// as we clearly have a document with the hash.
-		panic(err)
-	}
-
-	return game
-}
 
