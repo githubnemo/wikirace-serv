@@ -38,6 +38,24 @@ func trimPageName(path string) string {
 	return path[len("/wiki/"):]
 }
 
+func getFirstWikiParagraph(wikiUrl string) (string, error) {
+	doc, err := goquery.NewDocument(wikiUrl)
+
+	log.Println(wikiUrl)
+
+	if err != nil {
+		return "", err
+	}
+
+	selections := doc.Find("#mw-content-text p")
+
+	if selections.Length() == 0 {
+		return "", fmt.Errorf("No selections found.")
+	}
+
+	return selections.First().Text(), nil
+}
+
 func rewriteWikiUrls(wikiUrl string) (string, error) {
 	doc, err := goquery.NewDocument(wikiUrl)
 
@@ -299,15 +317,23 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	summary, err := getFirstWikiParagraph("http://de.wikipedia.org/wiki/" + game.Goal)
+
+	if err != nil {
+		summary = err.Error()
+	}
+
 	wikiUrl := "/visit?page=" + game.Start + "&host=de.wikipedia.org"
 	doc := `
 <html>
 	Start: %s<br>
 	Goal: %s<br>
+	<h3>Summary of goal page:</h3>
+	<p>%s</p>
 	<iframe name="gameFrame" width="50%%" height="50%%" src="%s"></iframe>
 </html>
 `
-	fmt.Fprintf(w, doc, game.Start, game.Goal, wikiUrl)
+	fmt.Fprintf(w, doc, game.Start, game.Goal, summary, wikiUrl)
 }
 
 // Serves initial page
