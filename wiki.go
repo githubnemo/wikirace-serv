@@ -72,9 +72,7 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 		return "", err
 	}
 
-	// TODO: area href rewrite
-
-	doc.Find("#bodyContent a").Each(func(i int, e *goquery.Selection) {
+	hrefRewriter := func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")
 
 		if !ok || !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":") {
@@ -84,7 +82,10 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 		page := trimPageName(link)
 
 		setAttributeValue(e.Nodes[0], "href", serviceVisitUrl(wpUrl.Host, page))
-	})
+	}
+
+	doc.Find("#bodyContent a").Each(hrefRewriter)
+	doc.Find("#bodyContent area").Each(hrefRewriter)
 
 	content, err := doc.Find("#bodyContent").Html()
 
