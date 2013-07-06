@@ -227,8 +227,44 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/game?id=" + game.Hash(), 300)
 }
 
-func playerJoinHandler(session *GameSession, w http.ResponseWriter, r *http.Request) {
-	// TODO: dialog and session setting
+func joinHandler(w http.ResponseWriter, r *http.Request) {
+	defer errorHandler(w, r)
+
+	values, err := url.ParseQuery(r.URL.RawQuery)
+
+	if err != nil {
+		panic(err)
+	}
+
+	gameId := values.Get("id")
+	playerName := values.Get("name")
+
+	if len(playerName) == 0 {
+		doc := `
+<html>
+	<form method="get">
+		<label for="name">Enter your name</label>
+		<input type="hidden" name="id" value="%s">
+		<input type="text" name="name">
+		<input type="submit">
+	</form>
+</html>
+`
+		fmt.Fprintf(w, doc, gameId)
+		return
+	}
+
+	// Check if game really exists
+	// TODO
+
+	// Check if player name is not taken
+	// TODO
+
+	session, err := session.GetGameSession(r)
+	session.Init(playerName, gameId)
+	session.Save(r, w)
+
+	http.Redirect(w, r, "/game?id=" + gameId, 301)
 }
 
 // Serve game content
@@ -237,13 +273,13 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := session.GetGameSession(r)
 
-	if !session.IsInitialized() {
-		playerJoinHandler(session, w, r)
-		return
-	}
-
 	if err != nil {
 		panic(err)
+	}
+
+	if !session.IsInitialized() {
+		http.Redirect(w, r, "/join?" + r.URL.RawQuery, 300)
+		return
 	}
 
 	game, err := session.GetGame()
@@ -304,6 +340,7 @@ func main() {
 	http.HandleFunc("/visit", visitHandler)
 	http.HandleFunc("/start", startHandler)
 	http.HandleFunc("/game", gameHandler)
+	http.HandleFunc("/join", joinHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
