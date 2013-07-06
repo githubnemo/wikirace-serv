@@ -222,7 +222,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Everything went well, tell him he shall go to the game session.
 	// The URL to the game shall be shareable.
-	http.Redirect(w, r, "/game?id=" + game.Hash(), 300)
+	http.Redirect(w, r, "/game?id=" + game.Hash(), 301)
 }
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
@@ -286,7 +286,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !session.IsInitialized() {
-		http.Redirect(w, r, "/join?" + r.URL.RawQuery, 300)
+		http.Redirect(w, r, "/join?" + r.URL.RawQuery, 301)
 		return
 	}
 
