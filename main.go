@@ -255,10 +255,12 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	wikiUrl := "/visit?page=" + game.Start + "&host=de.wikipedia.org"
 	doc := `
 <html>
+	Start: %s<br>
+	Goal: %s<br>
 	<iframe name="gameFrame" width="50%%" height="50%%" src="%s"></iframe>
 </html>
 `
-	fmt.Fprintf(w, doc, wikiUrl)
+	fmt.Fprintf(w, doc, game.Start, game.Goal, wikiUrl)
 }
 
 // Serves initial page
