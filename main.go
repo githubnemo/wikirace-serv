@@ -75,9 +75,11 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		// He reached the goal
 
 		// This one is the winner (for now)
-		if len(game.WinnerPath) > len(session.Visits()) {
+		if len(game.WinnerPath) == 0 || len(game.WinnerPath) > len(session.Visits()) {
 			game.Winner = session.PlayerName()
 			game.WinnerPath = session.Visits()
+
+			// TODO: announce new winner
 		}
 
 		templates.ExecuteTemplate(w, "win.html", struct{
