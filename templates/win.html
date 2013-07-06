@@ -1,0 +1,15 @@
+<html>
+	<body>
+		<pre>u reached the goal \o/</pre>
+
+		Visits in total: {{len .Session.Visits}} <br>
+
+		Path taken:
+		<ul>
+			{{range .Session.Visits}}
+			<li>{{.}}</li>
+			{{end}}
+		</ul>
+
+	</body>
+</html>

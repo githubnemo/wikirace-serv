@@ -75,7 +75,10 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		// We have a winner.
 		game.Winner = session.PlayerName()
 
-		fmt.Fprintf(w, "u win \\o/")
+		templates.ExecuteTemplate(w, "win.html", struct{
+			Game *Game
+			Session *GameSession
+		}{game, session})
 		return
 	}
 
