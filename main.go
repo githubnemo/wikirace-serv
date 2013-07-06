@@ -19,6 +19,8 @@ var (
 
 func serviceVisitUrl(wpHost, page string) string {
 	// TODO: page = encrypt(page)
+	page = url.QueryEscape(page)
+	wpHost = url.QueryEscape(wpHost)
 	return "/visit?page=" + page + "&host=" + wpHost
 }
 
@@ -222,6 +224,24 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "index.html", nil)
 }
 
+func parseTemplates() (err error) {
+	templates, err = template.ParseGlob("templates/*.html")
+
+	return err
+}
+
+func reloadHandler(w http.ResponseWriter, r *http.Request) {
+	defer errorHandler(w, r)
+
+	err := parseTemplates()
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Fprintf(w, "Reload OK.")
+}
+
 // TODO: send new visit and visit of opponent to website
 
 // Game initialization:
@@ -239,8 +259,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	session = NewGameSessionStore()
 
-	var err error
-	templates, err = templates.ParseGlob("templates/*")
+	err := parseTemplates()
 
 	if err != nil {
 		log.Fatal(err)
@@ -249,6 +268,7 @@ func main() {
 	gameStore = NewStore("./games")
 
 	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/reload", reloadHandler)
 	http.HandleFunc("/visit", visitHandler)
 	http.HandleFunc("/start", startHandler)
 	http.HandleFunc("/game", gameHandler)
