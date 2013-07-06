@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"bytes"
 	"net/url"
 	"net/http"
@@ -104,10 +103,14 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 
 	buf := bytes.NewBuffer([]byte{})
 
-	templates.ExecuteTemplate(buf, "wiki.html", struct{
+	err = templates.ExecuteTemplate(buf, "wiki.html", struct{
 		Header template.HTML
 		Content template.HTML
 	}{template.HTML(header), template.HTML(content)})
+
+	if err != nil {
+		return "", err
+	}
 
 	return buf.String(), nil
 }
@@ -115,8 +118,6 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 
 func getFirstWikiParagraph(wikiUrl string) (string, error) {
 	doc, err := goquery.NewDocument(wikiUrl)
-
-	log.Println(wikiUrl)
 
 	if err != nil {
 		return "", err

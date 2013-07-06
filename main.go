@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"html/template"
 	"runtime/debug"
+	"encoding/base64"
+	"math"
+	"crypto/des"
+	"crypto/cipher"
 )
 
 // Initialized in main()
@@ -14,12 +18,57 @@ var (
 	session *GameSessionStore
 	gameStore *Store
 	templates *template.Template
+	pageCipher cipher.Block
 )
 
+// pad the input bytes and return the amount of padded bytes
+func pad(in []byte, sz int) (padded []byte, bytes int) {
+	padded = in
+
+	if len(in) % sz != 0 {
+		newLen := int(float64(sz) * math.Ceil(float64(len(in)) / float64(sz)))
+		padded =  make([]byte, newLen)
+
+		bytes = newLen - len(in)
+		copy(padded, in)
+	}
+
+	return padded, bytes
+}
+
+func encryptPage(page string) string {
+	dst, padding := pad([]byte(page), pageCipher.BlockSize())
+
+	pageCipher.Encrypt(dst, dst)
+
+	return fmt.Sprintf("%d:%s", padding, base64.URLEncoding.EncodeToString(dst))
+}
+
+func decryptPage(input string) string {
+	var padding int
+	var b64page string
+
+	_, err := fmt.Sscanf(input, "%d:%s", &padding, &b64page)
+
+	if err != nil {
+		panic(err)
+	}
+
+	dst, err := base64.URLEncoding.DecodeString(b64page)
+
+	if err != nil {
+		panic(err)
+	}
+
+	pageCipher.Decrypt(dst, dst)
+
+	sdst := string(dst)
+
+	return sdst[:len(sdst) - padding]
+}
 
 func serviceVisitUrl(wpHost, page string) string {
-	// TODO: page = encrypt(page)
-	page = url.QueryEscape(page)
+	page = encryptPage(page)
 	wpHost = url.QueryEscape(wpHost)
 	return "/visit?page=" + page + "&host=" + wpHost
 }
@@ -57,6 +106,8 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	host := values.Get("host")
 	page := values.Get("page")
+
+	page = decryptPage(page)
 
     session, err := session.GetGameSession(r)
 
@@ -240,7 +291,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		summary = err.Error()
 	}
 
-	wikiUrl := "/visit?page=" + session.LastVisited() + "&host=de.wikipedia.org"
+	wikiUrl := serviceVisitUrl("de.wikipedia.org", session.LastVisited())
 
 	templates.ExecuteTemplate(w, "game.html", struct{
 		Game *Game
@@ -292,6 +343,12 @@ func main() {
 	session = NewGameSessionStore()
 
 	err := parseTemplates()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pageCipher, err = des.NewCipher([]byte("lirumlar"))
 
 	if err != nil {
 		log.Fatal(err)
