@@ -94,7 +94,13 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 			Game *Game
 			Session *GameSession
 			IsWinner bool
-		}{game, session, game.Winner == session.PlayerName()})
+			WinningPageLink string
+		}{
+			game,
+			session,
+			game.Winner == session.PlayerName(),
+			buildWikiPageLink(host, page),
+		})
 
 		return
 	}

@@ -6,18 +6,29 @@
 			<pre>u reached the goal \o/ Sadly, your path was too long.</pre>
 		{{end}}
 
+		<p>
 		{{if not .IsWinner}}
 		Visits of the winner: {{len .Game.WinnerPath}} <br>
 		{{end}}
+		</p>
 
+		<p>
+		Here's a link to the winning wikipedia page:
+		<a href="{{.WinningPageLink}}" target="_blank">Link</a>.
+		</p>
+
+		<p>
 		Visits in total: {{len .Session.Visits}} <br>
+		</p>
 
+		<p>
 		Path taken:
 		<ul>
 			{{range .Session.Visits}}
 			<li>{{.}}</li>
 			{{end}}
 		</ul>
+		</p>
 
 	</body>
 </html>

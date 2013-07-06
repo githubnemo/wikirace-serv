@@ -24,9 +24,12 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 	return fmt.Errorf("Didn't find attribute %s.\n", attrName)
 }
 
+func buildWikiPageLink(host, page string) string {
+	return "http://" + host + "/wiki/" + page
+}
 
 func serveWikiPage(host, page string, w http.ResponseWriter) {
-	content, err := rewriteWikiUrls("http://" + host + "/wiki/" + page)
+	content, err := rewriteWikiUrls(buildWikiPageLink(host, page))
 
 	if err != nil {
 		panic(err)
