@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+	"bytes"
 	"net/url"
 	"net/http"
+	"html/template"
 	"strings"
 	"github.com/PuerkitoBio/goquery"
 	"code.google.com/p/go.net/html"
@@ -70,6 +72,8 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 		return "", err
 	}
 
+	// TODO: area href rewrite
+
 	doc.Find("#bodyContent a").Each(func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")
 
@@ -94,8 +98,14 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf(`<html><head>%s</head><body>%s</body></html>`,
-		header, content), nil
+	buf := bytes.NewBuffer([]byte{})
+
+	templates.ExecuteTemplate(buf, "wiki.html", struct{
+		Header template.HTML
+		Content template.HTML
+	}{template.HTML(header), template.HTML(content)})
+
+	return buf.String(), nil
 }
 
 
