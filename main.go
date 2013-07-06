@@ -285,6 +285,8 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// TODO: session valid but game inexistant -> invalidate session
+
 	if !session.IsInitialized() {
 		http.Redirect(w, r, "/join?" + r.URL.RawQuery, 301)
 		return
