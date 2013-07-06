@@ -81,6 +81,11 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		if len(game.WinnerPath) == 0 || len(game.WinnerPath) > len(session.Visits()) {
 			game.Winner = session.PlayerName()
 			game.WinnerPath = session.Visits()
+			err := game.Save()
+
+			if err != nil {
+				panic(err)
+			}
 
 			// TODO: announce new winner
 		}
