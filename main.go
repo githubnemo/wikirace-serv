@@ -116,6 +116,12 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	page = decryptPage(page)
 
+	page, err = url.QueryUnescape(page)
+
+	if err != nil {
+		panic(err)
+	}
+
     session, err := session.GetGameSession(r)
 
 	if err != nil || !session.IsInitialized() {
