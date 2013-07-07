@@ -1,5 +1,21 @@
 package main
 
+import (
+	"fmt"
+	"time"
+	"crypto"
+	_ "crypto/sha1"
+)
+
+var gameHasher = crypto.SHA1.New()
+
+func init() {
+	// Initialize the gameHasher with the current date so that
+	// the first name entered does not produce the same game hash
+	// everytime.
+	gameHasher.Write([]byte(time.Now().String()))
+}
+
 type Game struct {
 	// Cache for the game hash
 	hash string
@@ -54,10 +70,15 @@ func (g *Game) Save() error {
 }
 
 
-// Compute the game hash using the hosting player's name
+// Compute a game hash using the hosting player's name.
+// This will produce a new hash on every call so that
+// a player can create more than one game.
 func computeGameHash(playerName string) string {
-	// TODO: actual hash
-	return playerName + "itsahashdealwithit"
+	gameHasher.Write([]byte(playerName))
+
+	hash := gameHasher.Sum(nil)
+
+	return fmt.Sprintf("%x", hash)
 }
 
 // The key has to be present.
