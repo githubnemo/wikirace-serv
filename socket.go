@@ -55,11 +55,17 @@ func SockServer(ws *websocket.Conn) {
 	for {
 		select {
 		case msg := <-game.GetChannel():
-			res, _ := json.Marshal(msg)
+			res, err := json.Marshal(msg)
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			for cs, _ := range ActiveClients {
 				if err = Message.Send(cs.websocket, string(res)); err != nil {
 					// we could not send the message to a peer
-					log.Println("Could not send message to ", cs.clientIP, err.Error(), " - dropping client.")
+					log.Println("Could not send message to ",
+						cs.clientIP, err.Error(), " - dropping client.")
 					delete(ActiveClients, sockCli)
 				}
 			}

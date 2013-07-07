@@ -21,7 +21,7 @@ type GameMessage struct {
 }
 
 func createMessage(messagetype int, playername, message string) (GameMessage, error) {
-	log.Println("sending message", messagetype, playername, message)
+	log.Println("created message", messagetype, playername, message)
 	switch messagetype {
 	case visit:
 		return GameMessage{playername, messagetype, message}, nil
