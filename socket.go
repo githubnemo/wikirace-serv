@@ -24,14 +24,12 @@ type ClientConn struct {
 
 func init() {
 	http.Handle("/client", websocket.Handler(SockServer))
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("templates/js"))))
 }
 
 // WebSocket server to handle chat between clients
 func SockServer(ws *websocket.Conn) {
 	var err error
-	var clientMessage string
-	// use []byte if websocket binary type is blob or arraybuffer
-	// var clientMessage []byte
 
 	// cleanup on server side
 	defer func() {
@@ -49,21 +47,16 @@ func SockServer(ws *websocket.Conn) {
 	// for loop so the websocket stays open otherwise
 	// it'll close after one Receieve and Send
 	for {
-		if err = Message.Receive(ws, &clientMessage); err != nil {
-			// If we cannot Read then the connection is closed
-			log.Println("Websocket Disconnected waiting", err.Error())
-			// remove the ws client conn from our active clients
-			delete(ActiveClients, sockCli)
-			log.Println("Number of clients still connected ...", len(ActiveClients))
-			return
-		}
-
-		clientMessage = sockCli.clientIP + " Said: " + clientMessage
-		for cs, _ := range ActiveClients {
-			if err = Message.Send(cs.websocket, clientMessage); err != nil {
-				// we could not send the message to a peer
-				log.Println("Could not send message to ", cs.clientIP, err.Error())
-			}
-		}
+		select {
+			case msg := <- VisitChannel:
+				log.Println("received", msg.CurrentPage)
+				for cs, _ := range ActiveClients {
+					if err = Message.Send(cs.websocket, msg.CurrentPage); err != nil {
+						// we could not send the message to a peer
+						log.Println("Could not send message to ", cs.clientIP, err.Error(), " - dropping client.")
+						delete(ActiveClients, sockCli)
+					}
+				}
+		}		
 	}
 }

@@ -14,8 +14,14 @@ var (
 	session *GameSessionStore
 	gameStore *Store
 	templates *template.Template
+	VisitChannel chan VisitMessage
 )
 
+type VisitMessage struct {
+	PlayerName string
+	GameID string
+	CurrentPage string
+}
 
 func serviceVisitUrl(wpHost, page string) string {
 	// TODO: page = encrypt(page)
@@ -78,6 +84,8 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "u win \\o/")
 		return
 	}
+
+	VisitChannel <- VisitMessage{session.PlayerName(), session.GameHash(), page}
 
 	session.Visited(page)
     session.Save(r, w)
@@ -266,6 +274,7 @@ func main() {
 	}
 
 	gameStore = NewStore("./games")
+	VisitChannel = make(chan VisitMessage, 10)
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/reload", reloadHandler)
