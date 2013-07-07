@@ -165,16 +165,8 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if msg, err := NewVisitMessage(session, page); err != nil {
-		panic(err)
-	} else {
-		if game, err := session.GetGame(); err == nil {
-			log.Printf("Putting message %#v to game channel\n", msg)
-			game.GetChannel() <- msg
-		} else {
-			panic("there is no game associated to this session, wad?")
-		}
-	}
+	msg := NewVisitMessage(session, page)
+	game.GetChannel() <- GameMessage(msg)
 
 	session.Visited(page)
 	session.Save(r, w)
@@ -292,15 +284,8 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/game?id="+gameId, 301)
 
-	if msg, err := NewJoinMessage(session.PlayerName()); err != nil {
-		panic(err)
-	} else {
-		if game, err := session.GetGame(); err == nil {
-			game.GetChannel() <- msg
-		} else {
-			panic("there is no game associated to this session, wad?")
-		}
-	}
+	msg := NewJoinMessage(session.PlayerName())
+	game.GetChannel() <- GameMessage(msg)
 }
 
 // Serve game content

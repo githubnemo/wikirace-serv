@@ -1,9 +1,5 @@
 package main
 
-import (
-	"errors"
-)
-
 const (
 	visit = iota
 	join
@@ -19,34 +15,33 @@ type GameMessage struct {
 	Message    string
 }
 
-func createMessage(messagetype int, playername, message string) (GameMessage, error) {
-	switch messagetype {
-	case visit:
-		return GameMessage{playername, messagetype, message}, nil
-	case join:
-		return GameMessage{playername, messagetype, message}, nil
-	default:
-		return GameMessage{}, errors.New("not a valid messagetype")
-	}
+type JoinMessage GameMessage
+type LeaveMessage GameMessage
+type VisitMessage GameMessage
+type FinishMessage GameMessage
+type GameOverMessage GameMessage
+type FatalStuffMessage GameMessage
+
+func createMessage(messagetype int, playername, message string) GameMessage {
+	return GameMessage{playername, messagetype, message}
 }
 
-func NewJoinMessage(playername string) (GameMessage, error) {
-	return createMessage(join, playername, "joined")
+func NewJoinMessage(playername string) JoinMessage {
+	return JoinMessage(createMessage(join, playername, "joined"))
 }
 
-func NewLeaveMessage(session *GameSession) (GameMessage, error) {
-	return createMessage(leave, session.PlayerName(), session.PlayerName())
+func NewLeaveMessage(session *GameSession) LeaveMessage {
+	return LeaveMessage(createMessage(leave, session.PlayerName(), session.PlayerName()))
 }
 
-func NewFinishMessage(session *GameSession) (GameMessage, error) {
-	return createMessage(finish, session.PlayerName(), session.PlayerName())
+func NewFinishMessage(session *GameSession) FinishMessage {
+	return FinishMessage(createMessage(finish, session.PlayerName(), session.PlayerName()))
 }
 
-func NewVisitMessage(session *GameSession, page string) (GameMessage, error) {
-
-	return createMessage(visit, session.PlayerName(), page)
+func NewVisitMessage(session *GameSession, page string) VisitMessage {
+	return VisitMessage(createMessage(visit, session.PlayerName(), page))
 }
 
-func NewGameOverMessage(session *GameSession) (GameMessage, error) {
-	return createMessage(gameover, session.PlayerName(), session.PlayerName())
+func NewGameOverMessage(session *GameSession) GameOverMessage {
+	return GameOverMessage(createMessage(gameover, session.PlayerName(), session.PlayerName()))
 }
