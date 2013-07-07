@@ -18,12 +18,12 @@ type Game struct {
 
 	// Name of the start and goal article of this game
 	Start string
-	Goal string
+	Goal  string
 }
 
 func NewGame(hostingPlayerName string) *Game {
 	return &Game{
-		Host: hostingPlayerName,
+		Host:         hostingPlayerName,
 		PlayerHashes: []string{hostingPlayerName},
 	}
 }
@@ -53,7 +53,6 @@ func (g *Game) Save() error {
 	return gameStore.PutMarshal(g.Hash(), g)
 }
 
-
 // Compute the game hash using the hosting player's name
 func computeGameHash(playerName string) string {
 	// TODO: actual hash
@@ -72,5 +71,3 @@ func getGameByHash(hash string) (*Game, error) {
 
 	return &game, nil
 }
-
-

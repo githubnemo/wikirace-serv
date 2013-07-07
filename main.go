@@ -1,24 +1,24 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/url"
-	"net/http"
-	"html/template"
-	"runtime/debug"
-	"encoding/base64"
-	"math"
-	"crypto/des"
 	"crypto/cipher"
+	"crypto/des"
+	"encoding/base64"
+	"fmt"
+	"html/template"
+	"log"
+	"math"
+	"net/http"
+	"net/url"
+	"runtime/debug"
 )
 
 // Initialized in main()
 var (
-	session *GameSessionStore
-	gameStore *Store
-	templates *template.Template
-	pageCipher cipher.Block
+	session      *GameSessionStore
+	gameStore    *Store
+	templates    *template.Template
+	pageCipher   cipher.Block
 	VisitChannel chan GameMessage
 )
 
@@ -26,9 +26,9 @@ var (
 func pad(in []byte, sz int) (padded []byte, bytes int) {
 	padded = in
 
-	if len(in) % sz != 0 {
-		newLen := int(float64(sz) * math.Ceil(float64(len(in)) / float64(sz)))
-		padded =  make([]byte, newLen)
+	if len(in)%sz != 0 {
+		newLen := int(float64(sz) * math.Ceil(float64(len(in))/float64(sz)))
+		padded = make([]byte, newLen)
 
 		bytes = newLen - len(in)
 		copy(padded, in)
@@ -65,7 +65,7 @@ func decryptPage(input string) string {
 
 	sdst := string(dst)
 
-	return sdst[:len(sdst) - padding]
+	return sdst[:len(sdst)-padding]
 }
 
 func serviceVisitUrl(wpHost, page string) string {
@@ -78,11 +78,11 @@ func errorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
 		w.WriteHeader(401)
 
-		fmt.Fprintf(w,"Oh...:(\n\n")
+		fmt.Fprintf(w, "Oh...:(\n\n")
 
-		if e,ok := err.(error); ok {
+		if e, ok := err.(error); ok {
 			w.Write([]byte(e.Error()))
-			w.Write([]byte{'\n','\n'})
+			w.Write([]byte{'\n', '\n'})
 			w.Write(debug.Stack())
 		} else {
 			fmt.Fprintf(w, "%s\n\n%s\n", err, debug.Stack())
@@ -117,7 +117,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-    session, err := session.GetGameSession(r)
+	session, err := session.GetGameSession(r)
 
 	if err != nil || !session.IsInitialized() {
 		panic(fmt.Errorf("Invalid session, sorry :/ (Error: %v)", err))
@@ -149,10 +149,10 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO: announce new winner
 		}
 
-		templates.ExecuteTemplate(w, "win.html", struct{
-			Game *Game
-			Session *GameSession
-			IsWinner bool
+		templates.ExecuteTemplate(w, "win.html", struct {
+			Game            *Game
+			Session         *GameSession
+			IsWinner        bool
 			WinningPageLink string
 		}{
 			game,
@@ -164,10 +164,14 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	VisitChannel <- NewVisitMessage(session, page)
+	if msg, err := NewVisitMessage(session, page); err != nil {
+		log.Println(err)
+	} else {
+		VisitChannel <- msg
+	}
 
 	session.Visited(page)
-    session.Save(r, w)
+	session.Save(r, w)
 	serveWikiPage(host, page, w)
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
@@ -223,7 +227,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Everything went well, tell him he shall go to the game session.
 	// The URL to the game shall be shareable.
-	http.Redirect(w, r, "/game?id=" + game.Hash(), 301)
+	http.Redirect(w, r, "/game?id="+game.Hash(), 301)
 }
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
@@ -273,7 +277,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	// FIXME: racy
 	game.Save()
 
-	http.Redirect(w, r, "/game?id=" + gameId, 301)
+	http.Redirect(w, r, "/game?id="+gameId, 301)
 }
 
 // Serve game content
@@ -291,7 +295,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: session valid but is another game -> warn about losing game
 
 	if !session.IsInitialized() {
-		http.Redirect(w, r, "/join?" + r.URL.RawQuery, 301)
+		http.Redirect(w, r, "/join?"+r.URL.RawQuery, 301)
 		return
 	}
 
@@ -309,8 +313,8 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	wikiUrl := serviceVisitUrl("de.wikipedia.org", session.LastVisited())
 
-	templates.ExecuteTemplate(w, "game.html", struct{
-		Game *Game
+	templates.ExecuteTemplate(w, "game.html", struct {
+		Game    *Game
 		Summary string
 		WikiURL string
 	}{game, summary, wikiUrl})

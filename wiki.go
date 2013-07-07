@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
-	"net/url"
-	"net/http"
-	"html/template"
-	"strings"
-	"github.com/PuerkitoBio/goquery"
 	"code.google.com/p/go.net/html"
+	"fmt"
+	"github.com/PuerkitoBio/goquery"
+	"html/template"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
@@ -37,7 +37,6 @@ func serveWikiPage(host, page string, w http.ResponseWriter) {
 	w.Write([]byte(content))
 }
 
-
 // Fetch two random pages from wikipedia and get the corresponding
 // page titles which will then represent the start and the goal of the game.
 func determineStartAndGoal() (string, string, error) {
@@ -56,10 +55,9 @@ func determineStartAndGoal() (string, string, error) {
 	}
 
 	return trimPageName(sresp.Request.URL.Path),
-		   trimPageName(gresp.Request.URL.Path),
-		   nil
+		trimPageName(gresp.Request.URL.Path),
+		nil
 }
-
 
 func rewriteWikiUrls(wikiUrl string) (string, error) {
 	doc, err := goquery.NewDocument(wikiUrl)
@@ -103,8 +101,8 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 
 	buf := bytes.NewBuffer([]byte{})
 
-	err = templates.ExecuteTemplate(buf, "wiki.html", struct{
-		Header template.HTML
+	err = templates.ExecuteTemplate(buf, "wiki.html", struct {
+		Header  template.HTML
 		Content template.HTML
 	}{template.HTML(header), template.HTML(content)})
 
@@ -114,7 +112,6 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 
 	return buf.String(), nil
 }
-
 
 func getFirstWikiParagraph(wikiUrl string) (string, error) {
 	doc, err := goquery.NewDocument(wikiUrl)
@@ -131,7 +128,6 @@ func getFirstWikiParagraph(wikiUrl string) (string, error) {
 
 	return selections.First().Text(), nil
 }
-
 
 func trimPageName(path string) string {
 	return path[len("/wiki/"):]

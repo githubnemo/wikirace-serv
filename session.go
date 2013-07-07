@@ -1,8 +1,8 @@
 package main
 
 import (
-	"net/http"
 	"github.com/gorilla/sessions"
+	"net/http"
 )
 
 type GameSessionStore struct {

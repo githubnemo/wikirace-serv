@@ -50,4 +50,3 @@ func (g *Store) Contains(hash string) bool {
 	}
 	return false
 }
-
