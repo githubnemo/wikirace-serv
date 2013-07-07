@@ -5,7 +5,8 @@ $(document).ready(function() {
     sock.onopen = function(m) { 
       console.log("CONNECTION opened..." + this.readyState);}
     sock.onmessage = function(m) { 
-      console.log("received: " + m.data)
+      var msg = jQuery.parseJSON(m.data)
+      console.log("received: " + msg.CurrentPage)
     }
     sock.onerror = function(m) {
       console.log("Error occured sending..." + m.data);}
