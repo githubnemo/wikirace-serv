@@ -115,6 +115,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	page := values.Get("page")
 
 	page = decryptPage(page)
+	page, err = url.QueryUnescape(page)
 
     session, err := session.GetGameSession(r)
 

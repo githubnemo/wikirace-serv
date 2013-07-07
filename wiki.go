@@ -123,7 +123,7 @@ func getFirstWikiParagraph(wikiUrl string) (string, error) {
 		return "", err
 	}
 
-	selections := doc.Find("#mw-content-text p")
+	selections := doc.Find("#mw-content-text > p")
 
 	if selections.Length() == 0 {
 		return "", fmt.Errorf("No selections found.")
