@@ -1,8 +1,20 @@
 $(document).ready(function() {
+	function getPlayerList() {
+		return $("#sidebar #players");
+	}
+
+	function newPlayerElement(name) {
+		return $('<li data-player="'+name+'">'+name+'(<span class="visits"></span>)</li>');
+	}
+
+	function findPlayerElement(name) {
+		return getPlayerList().find("li").filter(function() {
+			return $(this).data("player") == name;
+		});
+	}
+
 	function visitHandler(message) {
-		var $elem = $("#sidebar #players li").filter(function() {
-			return $(this).data("player") == message["PlayerName"];
-		}).find(".visits");
+		var $elem = findPlayerElement(message["PlayerName"]).find(".visits");
 
 		var cur = parseInt($elem.text());
 
@@ -11,12 +23,19 @@ $(document).ready(function() {
 		} else {
 			$elem.text(cur + 1);
 		}
+
+		$("#dialog").text(message["Message"]).dialog({
+			title: "visit"
+		});
+
 	}
 
 	function joinHandler(message) {
+		getPlayerList().append(newPlayerElement(message["PlayerName"]));
 	}
 
 	function leaveHandler(message) {
+		findPlayerElement(message["PlayerName"]).remove();
 	}
 
 	function finishHandler(message) {

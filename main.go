@@ -147,7 +147,9 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 				panic(err)
 			}
 
-			// TODO: announce new winner
+			// TODO: detect actual game win (not only temporary win)
+
+			game.Broadcast <- GameMessage(NewFinishMessage(session))
 		}
 
 		templates.ExecuteTemplate(w, "win.html", struct {
@@ -353,7 +355,7 @@ func reloadHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Reload OK.")
 }
 
-// TODO: send new visit and visit of opponent to website
+// TODO: Player leave messages
 
 // Game initialization:
 //
