@@ -63,9 +63,7 @@ func decryptPage(input string) string {
 
 	pageCipher.Decrypt(dst, dst)
 
-	sdst := string(dst)
-
-	return sdst[:len(sdst)-padding]
+	return string(dst[:len(dst)-padding])
 }
 
 func serviceVisitUrl(wpHost, page string) string {
@@ -131,6 +129,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Visited(page)
 	session.Save(r, w)
+	VisitChannel <- NewVisitMessage(session, page)
 
 	// FIXME: this could be racy
 	if page == game.Goal {
