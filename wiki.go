@@ -24,9 +24,12 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 	return fmt.Errorf("Didn't find attribute %s.\n", attrName)
 }
 
+func buildWikiPageLink(host, page string) string {
+	return "http://" + host + "/wiki/" + page
+}
 
 func serveWikiPage(host, page string, w http.ResponseWriter) {
-	content, err := rewriteWikiUrls("http://" + host + "/wiki/" + page)
+	content, err := rewriteWikiUrls(buildWikiPageLink(host, page))
 
 	if err != nil {
 		panic(err)
@@ -72,9 +75,7 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 		return "", err
 	}
 
-	// TODO: area href rewrite
-
-	doc.Find("#bodyContent a").Each(func(i int, e *goquery.Selection) {
+	hrefRewriter := func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")
 
 		if !ok || !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":") {
@@ -84,7 +85,10 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 		page := trimPageName(link)
 
 		setAttributeValue(e.Nodes[0], "href", serviceVisitUrl(wpUrl.Host, page))
-	})
+	}
+
+	doc.Find("#bodyContent a").Each(hrefRewriter)
+	doc.Find("#bodyContent area").Each(hrefRewriter)
 
 	content, err := doc.Find("#bodyContent").Html()
 

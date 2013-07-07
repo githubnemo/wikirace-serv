@@ -76,12 +76,38 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// FIXME: this could be racy
-	if len(game.Winner) == 0 && page == game.Goal {
-		// We have a winner.
-		game.Winner = session.PlayerName()
+	session.Visited(page)
+	session.Save(r, w)
 
-		fmt.Fprintf(w, "u win \\o/")
+	// FIXME: this could be racy
+	if page == game.Goal {
+		// He reached the goal
+
+		// This one is the winner (for now)
+		if len(game.WinnerPath) == 0 || len(game.WinnerPath) > len(session.Visits()) {
+			game.Winner = session.PlayerName()
+			game.WinnerPath = session.Visits()
+			err := game.Save()
+
+			if err != nil {
+				panic(err)
+			}
+
+			// TODO: announce new winner
+		}
+
+		templates.ExecuteTemplate(w, "win.html", struct{
+			Game *Game
+			Session *GameSession
+			IsWinner bool
+			WinningPageLink string
+		}{
+			game,
+			session,
+			game.Winner == session.PlayerName(),
+			buildWikiPageLink(host, page),
+		})
+
 		return
 	}
 
@@ -89,7 +115,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Visited(page)
     session.Save(r, w)
-
 	serveWikiPage(host, page, w)
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
@@ -166,20 +191,29 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if game really exists
-	// TODO
+	if !gameStore.Contains(gameId) {
+		panic("No such game")
+	}
 
-	// Check if player name is not taken
-	// TODO
-
-	session, err := session.GetGameSession(r)
-	session.Init(playerName, gameId)
-	session.Save(r, w)
-
-	game, err := session.GetGame()
+	game, err := getGameByHash(gameId)
 
 	if err != nil {
 		panic(err)
 	}
+
+	// Check if player name is not taken
+	if game.HasPlayer(playerName) {
+		panic("Player name already taken.")
+	}
+
+	// Don't allow join when there's already a winner
+	if len(game.Winner) > 0 {
+		panic("Game is locked as it has already a winner.")
+	}
+
+	session, err := session.GetGameSession(r)
+	session.Init(playerName, gameId)
+	session.Save(r, w)
 
 	game.AddPlayer(playerName)
 
@@ -216,7 +250,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		summary = err.Error()
 	}
 
-	wikiUrl := "/visit?page=" + game.Start + "&host=de.wikipedia.org"
+	wikiUrl := "/visit?page=" + session.LastVisited() + "&host=de.wikipedia.org"
 
 	templates.ExecuteTemplate(w, "game.html", struct{
 		Game *Game
