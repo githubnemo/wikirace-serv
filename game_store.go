@@ -28,13 +28,15 @@ func NewGameStore(s *Store) *GameStore {
 func (g *GameStore) NewGameHash(playerName string) (shash string) {
 	gameHasher.Write([]byte(playerName))
 
-	for {
+	for i := 0; ; i++ {
 		hash := gameHasher.Sum(nil)
-		shash := fmt.Sprintf("%x", hash)
+		shash = fmt.Sprintf("%x", hash)
 
 		if !g.Contains(shash) {
 			break
 		}
+
+		gameHasher.Write([]byte{byte(i & 0xFF)})
 	}
 
 	return shash
