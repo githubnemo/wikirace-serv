@@ -51,11 +51,11 @@ func SockServer(ws *websocket.Conn) {
 		game, _ = sess.GetGame()
 	}
 
-	log.Println(*game.GetChannel())
+	log.Println(game.GetChannel())
 
 	for {
 		select {
-		case msg := <-*game.GetChannel():
+		case msg := <-game.GetChannel():
 			res, _ := json.Marshal(msg)
 			for cs, _ := range ActiveClients {
 				if err = Message.Send(cs.websocket, string(res)); err != nil {

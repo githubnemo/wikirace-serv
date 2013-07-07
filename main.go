@@ -166,7 +166,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	} else {
 		if game, err := session.GetGame(); err == nil {
-			*game.GetChannel() <- msg
+			game.GetChannel() <- msg
 		} else {
 			log.Println("there is no game associated to this session, wad?")
 		}
@@ -292,7 +292,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	} else {
 		if game, err := session.GetGame(); err == nil {
-			*game.GetChannel() <- msg
+			game.GetChannel() <- msg
 		} else {
 			log.Println("there is no game associated to this session, wad?")
 		}

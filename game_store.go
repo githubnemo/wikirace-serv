@@ -48,9 +48,9 @@ func (g *GameStore) Save(game *Game) error {
 
 // The key has to be present.
 func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
-	var game Game
+	game := NewGame("")
 
-	err := g.GetMarshal(hash, &game)
+	err := g.GetMarshal(hash, game)
 
 	if err != nil {
 		return nil, err
@@ -59,6 +59,6 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 	// Only the game store knows the real hash, so we set it here.
 	game.hash = hash
 
-	return &game, nil
+	return game, nil
 }
 
