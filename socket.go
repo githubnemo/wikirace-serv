@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	listenAddr    = "91.97.71.252:8080"      // server address
 	JSON          = websocket.JSON           // codec for JSON
 	Message       = websocket.Message        // codec for string, []byte
 	ActiveClients = make(map[ClientConn]int) // map containing clients
