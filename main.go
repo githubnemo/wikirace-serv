@@ -163,12 +163,12 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if msg, err := NewVisitMessage(session, page); err != nil {
-		log.Println(err)
+		panic(err)
 	} else {
 		if game, err := session.GetGame(); err == nil {
 			game.GetChannel() <- msg
 		} else {
-			log.Println("there is no game associated to this session, wad?")
+			panic("there is no game associated to this session, wad?")
 		}
 	}
 
