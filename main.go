@@ -292,12 +292,12 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/game?id="+gameId, 301)
 
 	if msg, err := NewJoinMessage(session.PlayerName()); err != nil {
-		log.Println(err)
+		panic(err)
 	} else {
 		if game, err := session.GetGame(); err == nil {
 			game.GetChannel() <- msg
 		} else {
-			log.Println("there is no game associated to this session, wad?")
+			panic("there is no game associated to this session, wad?")
 		}
 	}
 }
