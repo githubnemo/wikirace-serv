@@ -22,8 +22,6 @@ type ClientConn struct {
 
 func init() {
 	http.Handle("/client", websocket.Handler(SockServer))
-	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("templates/js"))))
-	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("templates/css"))))
 }
 
 // WebSocket server to handle chat between clients

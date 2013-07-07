@@ -403,5 +403,8 @@ func main() {
 	http.HandleFunc("/game", gameHandler)
 	http.HandleFunc("/join", joinHandler)
 
+	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("assets/js"))))
+	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("assets/css"))))
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
