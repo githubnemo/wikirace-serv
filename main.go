@@ -19,6 +19,7 @@ var (
 	gameStore  *GameStore
 	templates  *template.Template
 	pageCipher cipher.Block
+	VisitChannel chan GameMessage
 )
 
 // pad the input bytes and return the amount of padded bytes
