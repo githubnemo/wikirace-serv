@@ -244,6 +244,13 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	gameId := values.Get("id")
 	playerName := values.Get("name")
 
+	if len(gameId) == 0 {
+		// Just some lost sould trying to get a game starting, redirect
+		// him to the start page.
+		http.Redirect(w, r, "/", 301)
+		return
+	}
+
 	if len(playerName) == 0 {
 		templates.ExecuteTemplate(w, "join.html", gameId)
 		return
