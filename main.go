@@ -129,6 +129,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Visited(page)
 	session.Save(r, w)
+	VisitChannel <- NewVisitMessage(session, page)
 
 	// FIXME: this could be racy
 	if page == game.Goal {
@@ -162,10 +163,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	VisitChannel <- NewVisitMessage(session, page)
-
-	session.Visited(page)
-    session.Save(r, w)
 	serveWikiPage(host, page, w)
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
