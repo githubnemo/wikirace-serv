@@ -73,12 +73,18 @@ func (g *Game) Save() error {
 // Compute a game hash using the hosting player's name.
 // This will produce a new hash on every call so that
 // a player can create more than one game.
-func computeGameHash(playerName string) string {
+func computeGameHash(playerName string) (shash string) {
 	gameHasher.Write([]byte(playerName))
 
-	hash := gameHasher.Sum(nil)
+	for {
+		hash := gameHasher.Sum(nil)
+		shash := fmt.Sprintf("%x", hash)
 
-	return fmt.Sprintf("%x", hash)
+		if !gameStore.Contains(shash) {
+			break
+		}
+	}
+	return shash
 }
 
 // The key has to be present.
