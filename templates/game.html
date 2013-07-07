@@ -3,7 +3,7 @@
 <link href="../css/game.css" rel="stylesheet" type="text/css" />
 
 <html>
-	
+
 
 <div id="wrapper">
     <div id="header">
@@ -12,11 +12,10 @@
     </div>
 
     <div id="content">
-	    <!-- http://stackoverflow.com/a/9880360/1643939 -->
+		<h3>Summary of goal page:</h3>
+		<p>{{.Summary}}</p>
 
-	<h3>Summary of goal page:</h3>
-	<p>{{.Summary}}</p>
-	
+	    <!-- http://stackoverflow.com/a/9880360/1643939 -->
 		<iframe sandbox="allow-forms allow-scripts" name="gameFrame" width="100%" height="50%" src="{{.WikiURL}}"></iframe>
     </div>
     <div id="sidebar">
@@ -32,7 +31,7 @@
         <b>log</b>
         <ol id="log">
         </ol>
-        
+
     </div>
 </div>
 
