@@ -1,0 +1,45 @@
+#header {
+    font-size: 1.1em;
+    background-color: #7BF3C2;
+    margin: 8px;
+    padding: 8px;
+}
+
+#header h3 {
+    font-size: 0.5em;
+}
+
+#sidebar {
+    background-color: #EF7DAC;
+    width: 20%;
+    float: right; 
+    margin: -4px 8px 0 0;
+    padding: 1px;
+}
+
+#sidebar .path {
+    list-style-type: decimal;
+    margin-left: 32px;
+}
+
+
+#sidebar hr {
+    background-color: #000;
+    height: 1px;
+    border: none;
+}
+
+#wrapper {
+    position: relative;
+}
+
+#content {
+    width: 75%;
+    height: 100%;
+    float: left;
+}
+
+#content iframe {
+    width: 100%;
+    height: 85%;
+}

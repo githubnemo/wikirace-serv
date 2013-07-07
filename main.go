@@ -19,14 +19,8 @@ var (
 	gameStore *Store
 	templates *template.Template
 	pageCipher cipher.Block
-	VisitChannel chan VisitMessage
+	VisitChannel chan GameMessage
 )
-
-type VisitMessage struct {
-	PlayerName string
-	GameID string
-	CurrentPage string
-}
 
 // pad the input bytes and return the amount of padded bytes
 func pad(in []byte, sz int) (padded []byte, bytes int) {
@@ -170,7 +164,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	VisitChannel <- VisitMessage{session.PlayerName(), session.GameHash(), page}
+	VisitChannel <- NewVisitMessage(session, page)
 
 	session.Visited(page)
     session.Save(r, w)
@@ -377,7 +371,7 @@ func main() {
 	}
 
 	gameStore = NewStore("./games")
-	VisitChannel = make(chan VisitMessage, 10)
+	VisitChannel = make(chan GameMessage, 10)
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/reload", reloadHandler)

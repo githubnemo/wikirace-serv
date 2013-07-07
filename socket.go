@@ -2,16 +2,13 @@ package main
 
 import (
 	"code.google.com/p/go.net/websocket"
+	"encoding/json"
 	"log"
 	"net/http"
-	"encoding/json"
-)
-
-const (
-	listenAddr = "localhost:8080" // server address
 )
 
 var (
+	listenAddr    = "91.97.71.252:8080"      // server address
 	JSON          = websocket.JSON           // codec for JSON
 	Message       = websocket.Message        // codec for string, []byte
 	ActiveClients = make(map[ClientConn]int) // map containing clients
@@ -24,8 +21,10 @@ type ClientConn struct {
 }
 
 func init() {
+
 	http.Handle("/client", websocket.Handler(SockServer))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("templates/js"))))
+	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("templates/css"))))
 }
 
 // WebSocket server to handle chat between clients
@@ -49,15 +48,16 @@ func SockServer(ws *websocket.Conn) {
 	// it'll close after one Receieve and Send
 	for {
 		select {
-			case msg := <- VisitChannel:
-				res, _ := json.Marshal(msg)
-				for cs, _ := range ActiveClients {
-					if err = Message.Send(cs.websocket, string(res)); err != nil {
-						// we could not send the message to a peer
-						log.Println("Could not send message to ", cs.clientIP, err.Error(), " - dropping client.")
-						delete(ActiveClients, sockCli)
-					}
+		case msg := <-VisitChannel:
+			res, _ := json.Marshal(msg)
+			log.Println(msg)
+			for cs, _ := range ActiveClients {
+				if err = Message.Send(cs.websocket, string(res)); err != nil {
+					// we could not send the message to a peer
+					log.Println("Could not send message to ", cs.clientIP, err.Error(), " - dropping client.")
+					delete(ActiveClients, sockCli)
 				}
-		}		
+			}
+		}
 	}
 }
