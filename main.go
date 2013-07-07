@@ -19,7 +19,6 @@ var (
 	gameStore  *GameStore
 	templates  *template.Template
 	pageCipher cipher.Block
-	VisitChannel chan GameMessage
 )
 
 // pad the input bytes and return the amount of padded bytes
@@ -398,7 +397,6 @@ func main() {
 	}
 
 	gameStore = NewGameStore(NewStore("./games"))
-	VisitChannel = make(chan GameMessage, 10)
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/reload", reloadHandler)
