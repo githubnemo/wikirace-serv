@@ -21,9 +21,9 @@
     </div>
     <div id="sidebar">
         <b>current players</b><br />
-		<ul>
+		<ul id="players">
 			{{range .Game.PlayerHashes}}
-				<li>{{.}}</li>
+			<li data-player="{{.}}">{{.}} (<span class="visits"></span>)</li>
 			{{end}}
         </ul>
         <b>start: </b> {{.Game.Start}}<br />

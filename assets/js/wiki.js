@@ -1,5 +1,16 @@
 $(document).ready(function() {
 	function visitHandler(message) {
+		var $elem = $("#sidebar #players li").filter(function() {
+			return $(this).data("player") == message["PlayerName"];
+		}).find(".visits");
+
+		var cur = parseInt($elem.text());
+
+		if (isNaN(cur)) {
+			$elem.text("1");
+		} else {
+			$elem.text(cur + 1);
+		}
 	}
 
 	function joinHandler(message) {
