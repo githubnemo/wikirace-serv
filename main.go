@@ -1,34 +1,33 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/url"
-	"net/http"
-	"html/template"
-	"runtime/debug"
-	"encoding/base64"
-	"math"
-	"crypto/des"
 	"crypto/cipher"
+	"crypto/des"
+	"encoding/base64"
+	"fmt"
+	"html/template"
+	"log"
+	"math"
+	"net/http"
+	"net/url"
+	"runtime/debug"
 )
 
 // Initialized in main()
 var (
-	session *GameSessionStore
-	gameStore *GameStore
-	templates *template.Template
+	session    *GameSessionStore
+	gameStore  *GameStore
+	templates  *template.Template
 	pageCipher cipher.Block
-	VisitChannel chan GameMessage
 )
 
 // pad the input bytes and return the amount of padded bytes
 func pad(in []byte, sz int) (padded []byte, bytes int) {
 	padded = in
 
-	if len(in) % sz != 0 {
-		newLen := int(float64(sz) * math.Ceil(float64(len(in)) / float64(sz)))
-		padded =  make([]byte, newLen)
+	if len(in)%sz != 0 {
+		newLen := int(float64(sz) * math.Ceil(float64(len(in))/float64(sz)))
+		padded = make([]byte, newLen)
 
 		bytes = newLen - len(in)
 		copy(padded, in)
@@ -63,7 +62,7 @@ func decryptPage(input string) string {
 
 	pageCipher.Decrypt(dst, dst)
 
-	return string(dst[:len(dst) - padding])
+	return string(dst[:len(dst)-padding])
 }
 
 func serviceVisitUrl(wpHost, page string) string {
@@ -76,11 +75,11 @@ func errorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
 		w.WriteHeader(401)
 
-		fmt.Fprintf(w,"Oh...:(\n\n")
+		fmt.Fprintf(w, "Oh...:(\n\n")
 
-		if e,ok := err.(error); ok {
+		if e, ok := err.(error); ok {
 			w.Write([]byte(e.Error()))
-			w.Write([]byte{'\n','\n'})
+			w.Write([]byte{'\n', '\n'})
 			w.Write(debug.Stack())
 		} else {
 			fmt.Fprintf(w, "%s\n\n%s\n", err, debug.Stack())
@@ -115,7 +114,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-    session, err := session.GetGameSession(r)
+	session, err := session.GetGameSession(r)
 
 	if err != nil || !session.IsInitialized() {
 		panic(fmt.Errorf("Invalid session, sorry :/ (Error: %v)", err))
@@ -129,7 +128,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Visited(page)
 	session.Save(r, w)
-	VisitChannel <- NewVisitMessage(session, page)
 
 	// FIXME: this could be racy
 	if page == game.Goal {
@@ -148,10 +146,10 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO: announce new winner
 		}
 
-		templates.ExecuteTemplate(w, "win.html", struct{
-			Game *Game
-			Session *GameSession
-			IsWinner bool
+		templates.ExecuteTemplate(w, "win.html", struct {
+			Game            *Game
+			Session         *GameSession
+			IsWinner        bool
 			WinningPageLink string
 		}{
 			game,
@@ -163,6 +161,18 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg, err := NewVisitMessage(session, page); err != nil {
+		log.Println(err)
+	} else {
+		if game, err := session.GetGame(); err == nil {
+			*game.GetChannel() <- msg
+		} else {
+			log.Println("there is no game associated to this session, wad?")
+		}
+	}
+
+	session.Visited(page)
+	session.Save(r, w)
 	serveWikiPage(host, page, w)
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
@@ -218,7 +228,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Everything went well, tell him he shall go to the game session.
 	// The URL to the game shall be shareable.
-	http.Redirect(w, r, "/game?id=" + game.Hash(), 301)
+	http.Redirect(w, r, "/game?id="+game.Hash(), 301)
 }
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
@@ -268,7 +278,17 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	// FIXME: racy
 	gameStore.Save(game)
 
-	http.Redirect(w, r, "/game?id=" + gameId, 301)
+	http.Redirect(w, r, "/game?id="+gameId, 301)
+
+	if msg, err := NewJoinMessage(session.PlayerName()); err != nil {
+		log.Println(err)
+	} else {
+		if game, err := session.GetGame(); err == nil {
+			*game.GetChannel() <- msg
+		} else {
+			log.Println("there is no game associated to this session, wad?")
+		}
+	}
 }
 
 // Serve game content
@@ -286,7 +306,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: session valid but is another game -> warn about losing game
 
 	if !session.IsInitialized() {
-		http.Redirect(w, r, "/join?" + r.URL.RawQuery, 301)
+		http.Redirect(w, r, "/join?"+r.URL.RawQuery, 301)
 		return
 	}
 
@@ -304,8 +324,8 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	wikiUrl := serviceVisitUrl("de.wikipedia.org", session.LastVisited())
 
-	templates.ExecuteTemplate(w, "game.html", struct{
-		Game *Game
+	templates.ExecuteTemplate(w, "game.html", struct {
+		Game    *Game
 		Summary string
 		WikiURL string
 	}{game, summary, wikiUrl})

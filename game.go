@@ -18,14 +18,24 @@ type Game struct {
 
 	// Name of the start and goal article of this game
 	Start string
-	Goal string
+	Goal  string
+
+	gameChannel chan GameMessage `json:"-"`
 }
 
 func NewGame(hostingPlayerName string) *Game {
 	return &Game{
-		Host: hostingPlayerName,
+		Host:         hostingPlayerName,
 		PlayerHashes: []string{hostingPlayerName},
+		gameChannel:  make(chan GameMessage, 10),
 	}
+}
+
+func (g *Game) GetChannel() *chan GameMessage {
+	if g.gameChannel == nil {
+		g.gameChannel = make(chan GameMessage, 10)
+	}
+	return &g.gameChannel
 }
 
 func (g *Game) Hash() string {
