@@ -15,11 +15,10 @@ import (
 
 // Initialized in main()
 var (
-	session      *GameSessionStore
-	gameStore    *Store
-	templates    *template.Template
-	pageCipher   cipher.Block
-	VisitChannel chan GameMessage
+	session    *GameSessionStore
+	gameStore  *Store
+	templates  *template.Template
+	pageCipher cipher.Block
 )
 
 // pad the input bytes and return the amount of padded bytes
@@ -129,7 +128,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	session.Visited(page)
 	session.Save(r, w)
-	VisitChannel <- NewVisitMessage(session, page)
 
 	// FIXME: this could be racy
 	if page == game.Goal {
@@ -166,7 +164,11 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	if msg, err := NewVisitMessage(session, page); err != nil {
 		log.Println(err)
 	} else {
-		VisitChannel <- msg
+		if game, err := session.GetGame(); err == nil {
+			*game.GetChannel() <- msg
+		} else {
+			log.Println("there is no game associated to this session, wad?")
+		}
 	}
 
 	session.Visited(page)
@@ -251,7 +253,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 		panic("No such game")
 	}
 
-	game, err := getGameByHash(gameId)
+	game, err := GetGameByHash(gameId)
 
 	if err != nil {
 		panic(err)
@@ -277,6 +279,16 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	game.Save()
 
 	http.Redirect(w, r, "/game?id="+gameId, 301)
+
+	if msg, err := NewJoinMessage(session.PlayerName()); err != nil {
+		log.Println(err)
+	} else {
+		if game, err := session.GetGame(); err == nil {
+			*game.GetChannel() <- msg
+		} else {
+			log.Println("there is no game associated to this session, wad?")
+		}
+	}
 }
 
 // Serve game content
@@ -374,7 +386,6 @@ func main() {
 	}
 
 	gameStore = NewStore("./games")
-	VisitChannel = make(chan GameMessage, 10)
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/reload", reloadHandler)

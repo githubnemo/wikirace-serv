@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 )
 
 const (
@@ -20,16 +21,19 @@ type GameMessage struct {
 }
 
 func createMessage(messagetype int, playername, message string) (GameMessage, error) {
+	log.Println("sending message", messagetype, playername, message)
 	switch messagetype {
 	case visit:
+		return GameMessage{playername, messagetype, message}, nil
+	case join:
 		return GameMessage{playername, messagetype, message}, nil
 	default:
 		return GameMessage{}, errors.New("not a valid messagetype")
 	}
 }
 
-func NewJoinMessage(session *GameSession) (GameMessage, error) {
-	return createMessage(join, session.PlayerName(), session.PlayerName())
+func NewJoinMessage(playername string) (GameMessage, error) {
+	return createMessage(join, playername, "joined")
 }
 
 func NewLeaveMessage(session *GameSession) (GameMessage, error) {

@@ -83,5 +83,5 @@ func (s *GameSession) Visited(page string) {
 }
 
 func (s *GameSession) GetGame() (*Game, error) {
-	return getGameByHash(s.GameHash())
+	return GetGameByHash(s.GameHash())
 }

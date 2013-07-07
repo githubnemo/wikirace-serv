@@ -21,7 +21,6 @@ type ClientConn struct {
 }
 
 func init() {
-
 	http.Handle("/client", websocket.Handler(SockServer))
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("templates/js"))))
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("templates/css"))))
@@ -30,6 +29,7 @@ func init() {
 // WebSocket server to handle chat between clients
 func SockServer(ws *websocket.Conn) {
 	var err error
+	var game *Game
 
 	// cleanup on server side
 	defer func() {
@@ -39,18 +39,26 @@ func SockServer(ws *websocket.Conn) {
 	}()
 
 	client := ws.Request().RemoteAddr
-	log.Println("Client connected:", client)
+	log.Println("client connect ...", client)
 	sockCli := ClientConn{ws, client}
 	ActiveClients[sockCli] = 0
-	log.Println("Number of clients connected ...", len(ActiveClients))
 
 	// for loop so the websocket stays open otherwise
 	// it'll close after one Receieve and Send
+
+	request := ws.Request()
+	if sess, err := session.GetGameSession(request); err != nil {
+		log.Println("there is no game associated to this session, wad?")
+	} else {
+		game, _ = sess.GetGame()
+	}
+
+	log.Println(*game.GetChannel())
+
 	for {
 		select {
-		case msg := <-VisitChannel:
+		case msg := <-*game.GetChannel():
 			res, _ := json.Marshal(msg)
-			log.Println(msg)
 			for cs, _ := range ActiveClients {
 				if err = Message.Send(cs.websocket, string(res)); err != nil {
 					// we could not send the message to a peer
