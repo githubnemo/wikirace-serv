@@ -31,6 +31,7 @@ func NewGame(hostingPlayerName string) *Game {
 	}
 }
 
+// Deprecated: Use g.Broadcast directly
 func (g *Game) GetChannel() chan GameMessage {
 	return g.Broadcast
 }
