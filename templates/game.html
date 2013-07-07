@@ -21,10 +21,10 @@
     </div>
     <div id="sidebar">
         <b>current players</b><br />
-        <ul>
-            <li>krizz (that's you!)</li>
-            <li>nemo</li>
-            <li>cronide</li>
+		<ul>
+			{{range .Game.PlayerHashes}}
+				<li>{{.}}</li>
+			{{end}}
         </ul>
         <b>start: </b> {{.Game.Start}}<br />
         <b>goal: </b> {{.Game.Goal}}<br />
