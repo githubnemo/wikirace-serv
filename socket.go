@@ -55,6 +55,7 @@ func SockServer(ws *websocket.Conn) {
 	for {
 		select {
 		case msg := <-game.GetChannel():
+			log.Printf("attempting to send message %#v\n", msg)
 			res, err := json.Marshal(msg)
 
 			if err != nil {

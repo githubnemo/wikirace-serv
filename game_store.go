@@ -19,10 +19,12 @@ func init() {
 
 type GameStore struct {
 	*Store
+
+	activeGames map[string]*Game
 }
 
 func NewGameStore(s *Store) *GameStore {
-	return &GameStore{s}
+	return &GameStore{s, make(map[string]*Game)}
 }
 
 func (g *GameStore) NewGameHash(playerName string) (shash string) {
@@ -43,11 +45,18 @@ func (g *GameStore) NewGameHash(playerName string) (shash string) {
 }
 
 func (g *GameStore) Save(game *Game) error {
+	// TODO: remove from activeGames when ended
+
 	return g.PutMarshal(game.Hash(), game)
 }
 
+// Only one (pooled) instance of a game instance is returned.
 // The key has to be present.
 func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
+	if game, ok := g.activeGames[hash]; ok {
+		return game, nil
+	}
+
 	game := NewGame("")
 
 	err := g.GetMarshal(hash, game)
@@ -58,6 +67,8 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 
 	// Only the game store knows the real hash, so we set it here.
 	game.hash = hash
+
+	g.activeGames[hash] = game
 
 	return game, nil
 }

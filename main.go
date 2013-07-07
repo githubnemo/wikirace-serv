@@ -169,6 +169,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	} else {
 		if game, err := session.GetGame(); err == nil {
+			log.Printf("Putting message %#v to game channel\n", msg)
 			game.GetChannel() <- msg
 		} else {
 			panic("there is no game associated to this session, wad?")
