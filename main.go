@@ -16,7 +16,7 @@ import (
 // Initialized in main()
 var (
 	session *GameSessionStore
-	gameStore *Store
+	gameStore *GameStore
 	templates *template.Template
 	pageCipher cipher.Block
 	VisitChannel chan GameMessage
@@ -139,7 +139,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		if len(game.WinnerPath) == 0 || len(game.WinnerPath) > len(session.Visits()) {
 			game.Winner = session.PlayerName()
 			game.WinnerPath = session.Visits()
-			err := game.Save()
+			err := gameStore.Save(game)
 
 			if err != nil {
 				panic(err)
@@ -243,7 +243,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 		panic("No such game")
 	}
 
-	game, err := getGameByHash(gameId)
+	game, err := gameStore.GetGameByHash(gameId)
 
 	if err != nil {
 		panic(err)
@@ -266,7 +266,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	game.AddPlayer(playerName)
 
 	// FIXME: racy
-	game.Save()
+	gameStore.Save(game)
 
 	http.Redirect(w, r, "/game?id=" + gameId, 301)
 }
@@ -365,7 +365,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	gameStore = NewStore("./games")
+	gameStore = NewGameStore(NewStore("./games"))
 	VisitChannel = make(chan GameMessage, 10)
 
 	http.HandleFunc("/", indexHandler)
