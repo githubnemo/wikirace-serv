@@ -117,6 +117,12 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	page = decryptPage(page)
 	page, err = url.QueryUnescape(page)
 
+	page, err = url.QueryUnescape(page)
+
+	if err != nil {
+		panic(err)
+	}
+
     session, err := session.GetGameSession(r)
 
 	if err != nil || !session.IsInitialized() {
@@ -285,6 +291,10 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	// TODO: session valid but game inexistant -> invalidate session
+
+	// TODO: session valid but is another game -> warn about losing game
 
 	if !session.IsInitialized() {
 		http.Redirect(w, r, "/join?" + r.URL.RawQuery, 301)
