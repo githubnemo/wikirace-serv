@@ -67,6 +67,10 @@ func decryptPage(input string) string {
 }
 
 func serviceVisitUrl(wpHost, page string) string {
+	if len(page) == 0 {
+		panic("Empty page. This is quite likely a bug.")
+	}
+
 	page = encryptPage(page)
 	wpHost = url.QueryEscape(wpHost)
 	return "/visit?page=" + page + "&host=" + wpHost
