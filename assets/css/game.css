@@ -1,5 +1,11 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
 #header {
-    font-size: 1.1em;
+    font-size: 2em;
     background-color: #7BF3C2;
     margin: 8px;
     padding: 8px;
@@ -10,11 +16,15 @@
 }
 
 #sidebar {
+    width: 13%;
+    float: right;
+
+    margin-right: 8px;
+    padding: 8px 0 0 8px;
+
     background-color: #EF7DAC;
-    width: 20%;
-    float: right; 
-    margin: -4px 8px 0 0;
-    padding: 1px;
+
+    overflow: hidden;
 }
 
 #sidebar .path {
@@ -31,15 +41,19 @@
 
 #wrapper {
     position: relative;
+    height: 100%;
 }
 
 #content {
-    width: 75%;
+    position: absolute;
+    width: 83%;
     height: 100%;
-    float: left;
+
+    padding-left: 8px;
 }
 
 #content iframe {
+    border: 1px solid black;
     width: 100%;
     height: 85%;
 }
