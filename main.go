@@ -149,7 +149,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 			// TODO: detect actual game win (not only temporary win)
 
-			game.Broadcast <- GameMessage(NewFinishMessage(session))
+			game.Broadcast(GameMessage(NewFinishMessage(session)))
 		}
 
 		templates.ExecuteTemplate(w, "win.html", struct {
@@ -168,10 +168,8 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg := NewVisitMessage(session, page)
-	game.GetChannel() <- GameMessage(msg)
+	game.Broadcast(GameMessage(msg))
 
-	session.Visited(page)
-	session.Save(r, w)
 	serveWikiPage(host, page, w)
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
@@ -287,7 +285,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/game?id="+gameId, 301)
 
 	msg := NewJoinMessage(session.PlayerName())
-	game.GetChannel() <- GameMessage(msg)
+	game.Broadcast(GameMessage(msg))
 }
 
 // Serve game content

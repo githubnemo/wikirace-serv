@@ -19,21 +19,19 @@ type Game struct {
 	// Name of the start and goal article of this game
 	Start string
 	Goal  string
-
-	Broadcast chan GameMessage `json:"-"`
 }
 
 func NewGame(hostingPlayerName string) *Game {
-	return &Game{
+	game := &Game{
 		Host:         hostingPlayerName,
 		PlayerHashes: []string{hostingPlayerName},
-		Broadcast:    make(chan GameMessage, 10),
 	}
+
+	return game
 }
 
-// Deprecated: Use g.Broadcast directly
-func (g *Game) GetChannel() chan GameMessage {
-	return g.Broadcast
+func (g *Game) Broadcast(msg GameMessage) {
+	ClientHandler.Broadcast(g, &msg)
 }
 
 func (g *Game) Hash() string {
