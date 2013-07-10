@@ -31,7 +31,7 @@ func NewGame(hostingPlayerName string) *Game {
 }
 
 func (g *Game) Broadcast(msg GameMessage) {
-	ClientHandler.Broadcast(g, &msg)
+	ClientHandler.Broadcast(g, msg)
 }
 
 func (g *Game) Hash() string {

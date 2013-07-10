@@ -168,7 +168,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	msg := NewVisitMessage(session, page)
-	game.Broadcast(GameMessage(msg))
+	game.Broadcast(msg)
 
 	serveWikiPage(host, page, w)
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
@@ -285,7 +285,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/game?id="+gameId, 301)
 
 	msg := NewJoinMessage(session.PlayerName())
-	game.Broadcast(GameMessage(msg))
+	game.Broadcast(msg)
 }
 
 // Serve game content

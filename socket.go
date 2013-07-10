@@ -19,7 +19,7 @@ var (
 type ClientConn struct {
 	websocket *websocket.Conn
 	clientIP  string
-	inputChan *chan *GameMessage
+	inputChan *chan GameMessage
 }
 
 func init() {
@@ -31,7 +31,7 @@ type gameClients map[ClientConn]struct{}
 type SocketHandler map[*Game]gameClients
 
 // TODO: error returned?
-func (handler SocketHandler) Broadcast(game *Game, msg *GameMessage) {
+func (handler SocketHandler) Broadcast(game *Game, msg GameMessage) {
 	clients := handler[game]
 
 	for client, _ := range clients {
@@ -67,7 +67,7 @@ func SockServer(ws *websocket.Conn) {
 	var game *Game
 
 	clientIP := ws.Request().RemoteAddr
-	inputChan := make(chan *GameMessage)
+	inputChan := make(chan GameMessage)
 	sockCli := ClientConn{ws, clientIP, &inputChan}
 
 	// for loop so the websocket stays open otherwise
