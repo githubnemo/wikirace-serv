@@ -33,6 +33,13 @@ func (s *GameSession) Init(player, game string) {
 	s.Values["initialized"] = true
 }
 
+func (s *GameSession) Invalidate() {
+	s.Values["hash"] = ""
+	s.Values["name"] = ""
+	s.Values["visits"] = []string{}
+	s.Values["initialized"] = false
+}
+
 // Method to check whether the session was initialized properly
 // and is generally safe to use.
 func (s *GameSession) IsInitialized() bool {

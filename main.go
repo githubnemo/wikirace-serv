@@ -300,8 +300,25 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: session valid but game inexistant -> invalidate session
 
-	// TODO: session valid but is another game -> warn about losing game
 
+
+	values, err := url.ParseQuery(r.URL.RawQuery)
+
+	if err != nil {
+		panic(err)
+	}
+
+	gameId := values.Get("id")
+
+	// session valid but is another game -> overwrite game with new one
+	if session.IsInitialized() && len(gameId) > 0 {
+		if game, _ := session.GetGame(); game.Hash() != gameId {
+			// TODO: warn about losing game
+			session.Invalidate()
+		}
+	}
+
+	// Handle a new player
 	if !session.IsInitialized() {
 		http.Redirect(w, r, "/join?"+r.URL.RawQuery, 301)
 		return
