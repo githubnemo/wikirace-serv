@@ -78,7 +78,12 @@ func SockServer(ws *websocket.Conn) {
 		log.Println("there is no game associated to this session, wad?")
 		return
 	} else {
-		game, _ = sess.GetGame()
+		game, err = sess.GetGame()
+
+		if err != nil {
+			log.Println("SocketServer: game not found", err)
+			return
+		}
 	}
 
 	// Register client connection in global ClientHandler

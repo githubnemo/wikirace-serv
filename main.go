@@ -300,8 +300,6 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: session valid but game inexistant -> invalidate session
 
-
-
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {
