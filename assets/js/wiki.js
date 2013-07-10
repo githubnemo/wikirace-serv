@@ -23,11 +23,6 @@ $(document).ready(function() {
 		} else {
 			$elem.text(cur + 1);
 		}
-
-		$("#dialog").text(message["Message"]).dialog({
-			title: "visit"
-		});
-
 	}
 
 	function joinHandler(message) {
@@ -39,6 +34,9 @@ $(document).ready(function() {
 	}
 
 	function finishHandler(message) {
+		$("#dialog").text(message["PlayerName"] + " WINS").dialog({
+			title: "visit"
+		});
 	}
 
 	function gameOverHandler(message) {
