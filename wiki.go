@@ -31,6 +31,14 @@ func init() {
 	t := http.DefaultTransport.(*http.Transport)
 
 	t.ResponseHeaderTimeout = 10 * time.Second
+
+	var err error
+
+	wikis, err = readSupportedWikis()
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
@@ -57,12 +65,12 @@ func concurrentHead(url string) chan *headResult {
 	return c
 }
 
-func buildWikiPageLink(host, page string) string {
-	return host + "/wiki/" + page
+func buildWikiPageLink(url, page string) string {
+	return url + "/wiki/" + page
 }
 
-func serveWikiPage(host, page string, w http.ResponseWriter) {
-	content, err := rewriteWikiUrls(buildWikiPageLink(host, page))
+func ServeWikiPage(url, page string, w http.ResponseWriter) {
+	content, err := rewriteWikiUrls(buildWikiPageLink(url, page))
 
 	if err != nil {
 		panic(err)
@@ -73,11 +81,10 @@ func serveWikiPage(host, page string, w http.ResponseWriter) {
 
 // Fetch two random pages from wikipedia and get the corresponding
 // page titles which will then represent the start and the goal of the game.
-func determineStartAndGoal(host string) (string, string, error) {
-	wiki := getWikiInformationByUrl(host)
-	wpRandomUrl := wiki.URL + "/wiki/" + wiki.RandomPage
+func DetermineStartAndGoal(url string) (string, string, error) {
+	wiki := getWikiInformationByUrl(url)
 
-	fmt.Println(wpRandomUrl)
+	wpRandomUrl := buildWikiPageLink(wiki.URL, wiki.RandomPage)
 
 	c1 := concurrentHead(wpRandomUrl)
 	c2 := concurrentHead(wpRandomUrl)
@@ -153,8 +160,8 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 	return buf.String(), nil
 }
 
-func getFirstWikiParagraph(host, pageTitle string) (string, error) {
-	doc, err := goquery.NewDocument(buildWikiPageLink(host, pageTitle))
+func GetFirstWikiParagraph(url, pageTitle string) (string, error) {
+	doc, err := goquery.NewDocument(buildWikiPageLink(url, pageTitle))
 
 	if err != nil {
 		return "", err
@@ -173,11 +180,21 @@ func trimPageName(path string) string {
 	return path[len("/wiki/"):]
 }
 
-func fillSupportedWikis() {
+func readSupportedWikis() ([]Wiki, error) {
+	var wikis []Wiki
+
 	file, err := ioutil.ReadFile("config/supported_wikis")
-	if err == nil {
-		json.Unmarshal(file, &wikis)
+	if err != nil {
+		return nil, err
 	}
+
+	err = json.Unmarshal(file, &wikis)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return wikis, nil
 }
 
 func getWikiInformationByUrl(url string) *Wiki {

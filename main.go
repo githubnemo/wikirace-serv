@@ -135,8 +135,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	player.Visited(page)
 
-	host := game.WikiUrl
-
 	// FIXME: this could be racy
 	if page == game.Goal {
 		// He reached the goal
@@ -166,7 +164,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 			game,
 			player,
 			game.Winner == player.Name,
-			buildWikiPageLink(host, page),
+			buildWikiPageLink(game.WikiUrl, page),
 		})
 
 		return
@@ -174,7 +172,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	game.Broadcast(NewVisitMessage(session, page))
 
-	serveWikiPage(host, page, w)
+	ServeWikiPage(game.WikiUrl, page, w)
 
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
@@ -206,7 +204,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	host := game.WikiUrl
 
-	start, goal, err := determineStartAndGoal(host)
+	start, goal, err := DetermineStartAndGoal(host)
 
 	if err != nil {
 		panic(err)
@@ -339,7 +337,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	summary, err := getFirstWikiParagraph(game.WikiUrl, game.Goal)
+	summary, err := GetFirstWikiParagraph(game.WikiUrl, game.Goal)
 
 	if err != nil {
 		summary = err.Error()
@@ -414,7 +412,6 @@ func main() {
 	}
 
 	gameStore = NewGameStore(NewStore("./games"))
-	fillSupportedWikis()
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/reload", reloadHandler)
