@@ -416,4 +416,6 @@ func main() {
 	http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("assets/img"))))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	// TODO: Save all active games.
 }
