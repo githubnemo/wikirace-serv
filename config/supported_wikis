@@ -1,0 +1,17 @@
+[
+    {
+        "Name": "Wikipedia English",
+        "URL": "https://en.wikipedia.org",
+        "RandomPage": "Special:Random"
+    },
+    {
+        "Name": "Wikipedia German",
+        "URL": "https://de.wikipedia.org",
+        "RandomPage": "Spezial:Zuf%C3%A4llige_Seite"
+    },
+    {
+        "Name": "Tardis Wiki",
+        "URL": "https://tardis.wikia.com",
+        "RandomPage": "Special:Random"
+    }
+]

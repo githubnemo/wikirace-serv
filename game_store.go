@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"time"
 	"crypto"
 	_ "crypto/sha1"
+	"fmt"
+	"time"
 )
 
 var gameHasher = crypto.SHA1.New()
@@ -15,7 +15,6 @@ func init() {
 	// everytime.
 	gameHasher.Write([]byte(time.Now().String()))
 }
-
 
 type GameStore struct {
 	*Store
@@ -57,7 +56,7 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 		return game, nil
 	}
 
-	game := NewGame("")
+	game := NewGame("", "")
 
 	err := g.GetMarshal(hash, game)
 
@@ -72,4 +71,3 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 
 	return game, nil
 }
-

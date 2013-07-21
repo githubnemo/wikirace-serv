@@ -72,7 +72,7 @@ func serviceVisitUrl(wpHost, page string) string {
 
 	page = encryptPage(page)
 	wpHost = url.QueryEscape(wpHost)
-	return "/visit?page=" + page + "&host=" + wpHost
+	return "/visit?page=" + page
 }
 
 func errorHandler(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +106,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	host := values.Get("host")
 	page := values.Get("page")
 
 	page = decryptPage(page)
@@ -129,6 +128,8 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+
+	host := game.WikiUrl
 
 	session.Visited(page)
 	session.Save(r, w)
@@ -192,14 +193,15 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	playerName := values.Get("playerName")
+	wikiUrl := values.Get("wikiLanguage")
 
 	// FIXME: overwrites running game
 
-	game := NewGame(playerName)
+	game := NewGame(playerName, wikiUrl)
 
 	// TODO: make this selectable
 
-	host := "de.wikipedia.org"
+	host := game.WikiUrl
 
 	start, goal, err := determineStartAndGoal(host)
 
@@ -334,13 +336,15 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	summary, err := getFirstWikiParagraph("http://de.wikipedia.org/wiki/" + game.Goal)
+	fmt.Println(game.WikiUrl + "/wiki/" + game.Goal)
+
+	summary, err := getFirstWikiParagraph(game.WikiUrl + "/wiki/" + game.Goal)
 
 	if err != nil {
 		summary = err.Error()
 	}
 
-	wikiUrl := serviceVisitUrl("de.wikipedia.org", session.LastVisited())
+	wikiUrl := serviceVisitUrl(game.WikiUrl, session.LastVisited())
 
 	templates.ExecuteTemplate(w, "game.html", struct {
 		Game    *Game
@@ -352,8 +356,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 // Serves initial page
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	defer errorHandler(w, r)
-
-	templates.ExecuteTemplate(w, "index.html", nil)
+	templates.ExecuteTemplate(w, "index.html", wikis)
 }
 
 func parseTemplates() (err error) {
@@ -404,6 +407,7 @@ func main() {
 	}
 
 	gameStore = NewGameStore(NewStore("./games"))
+	fillSupportedWikis()
 
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/reload", reloadHandler)
