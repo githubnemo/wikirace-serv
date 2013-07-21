@@ -1,8 +1,74 @@
+<!DOCTYPE html>
+
 <html>
-	Start new game:
-	<form method="get" action="/start">
-		<label for="playerName">Player name:</label>
-		<input type="text" name="playerName" id="playerName">
-		<input type="submit">
-	</form>
+<head>
+    <link href="../css/jquery-ui.css" rel="stylesheet" type="text/css">
+    <link href="../css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <script src="http://code.jquery.com/jquery.js"></script>
+    <script src="../js/boostrap.min.js"></script>
+
+    <title></title>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="span8 offset2">
+                <h1>welcome to wikiracer (<a href="#fiddle">?</a>)</h1>
+
+                <h3>Start new game</h3>
+
+                <form action="/start" class="form-horizontal" method="get">
+                    <label class="control-label" for="playerName">Player name</label>
+
+                    <div class="control-group">
+                        <div class="controls">
+                            <input class="input-large" id="playerName" name="playerName" placeholder="Username" style="height: 32px;" type="text">
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="controls">
+                            <p><input class="btn btn-success btn-large" type="submit" value="Create"></p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="span8 offset2">
+                <a id="fiddle" name="fiddle"></a>
+
+                <h2>what is this fiddle?</h2>
+
+                <p>wikiracer is a funny little game created by Marian Tietz (<a href="https://github.com/githubnemo">nemo</a>) and Kristof Kipp (<a href="https://github.com/lakrizz">krizz</a>).</p>
+
+                <p>the ultimate goal is to reach the target-wikipedia-page before your opponent/s do. later on there will be statistics about games, shortest and longest routes and whatever we can think of.</p>
+
+                <p>this thing is still in a very very very very early pre-alpha-stage so there might (and i bet there will be more than we expect) be some bugs. huehue.</p>
+
+                <p>btw.: you can find the exact code on <a href="https://github.com/githubnemo/wikirace-serv">github</a>, isn't that awesome?</p>
+            </div>
+
+            <div class="span8 offset2"> 
+                <h2>temp stats</h2>
+                <dl class="dl-horizontal">
+                    <dt>current players</dt>
+                    <dd>4</dd>
+                    <dt>peak players</dt>
+                    <dd>32</dd>
+                    <dt>started games</dt>
+                    <dd>19237</dd>
+                    <dt>finished games</dt>
+                    <dd>290</dd>
+                    <dt>most visited page</dt>
+                    <dd><a href="http://en.wikipedia.org/wiki/Germany">Germany</a></dd>
+                </dl>
+            </div>
+
+            <div class="span8 offset2">
+                <h2>links, buttons, etc. pp.</h2><a href="https://github.com/githubnemo/wikirace-serv"><img alt="source codez!!" src="../img/octocat.svg" width="64"></a> <a href="http://www.raspberrypi.org/"><img alt="teh computaz this is running on" src="../img/pi.svg" width="48"></a> <a href="https://code.google.com/p/go/"><img alt="teh programming language" src="../img/gopher.png" width="64"></a> <a href="https://www.archlinux.org/"><img alt="teh distribution tis is running on" src="../img/arch.png" width="64"></a> <a href="http://twitter.github.io/bootstrap/"><img alt="lulz css framework" src="../img/bootstrap.svg" width="64"></a>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
