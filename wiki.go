@@ -3,26 +3,22 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/go.net/html"
+	"encoding/json"
 	"fmt"
-	"time"
 	"github.com/PuerkitoBio/goquery"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
-
-// Links to the random functionality of the key wiki stored in the key.
-var randomUrls = map[string]string {
-	"de.wikipedia.org": "http://de.wikipedia.org/wiki/Spezial:Zuf%C3%A4llige_Seite",
+type Wiki struct {
+	Name, URL, RandomPage string
 }
 
-// Wiki specific URL to access a page sorted by wiki host.
-// The page is concatenated at the end of the returned string.
-var wikiUrls = map[string]string {
-	"de.wikipedia.org": "http://de.wikipedia.org/wiki/",
-}
+var wikis []Wiki
 
 // Result type to pass over chan for concurrentHead()
 type headResult struct {
@@ -62,7 +58,7 @@ func concurrentHead(url string) chan *headResult {
 }
 
 func buildWikiPageLink(host, page string) string {
-	return wikiUrls[host] + page
+	return host + "/wiki/" + page
 }
 
 func serveWikiPage(host, page string, w http.ResponseWriter) {
@@ -78,7 +74,10 @@ func serveWikiPage(host, page string, w http.ResponseWriter) {
 // Fetch two random pages from wikipedia and get the corresponding
 // page titles which will then represent the start and the goal of the game.
 func determineStartAndGoal(host string) (string, string, error) {
-	wpRandomUrl := randomUrls[host]
+	wiki := getWikiInformationByUrl(host)
+	wpRandomUrl := wiki.URL + "/wiki/" + wiki.RandomPage
+
+	fmt.Println(wpRandomUrl)
 
 	c1 := concurrentHead(wpRandomUrl)
 	c2 := concurrentHead(wpRandomUrl)
@@ -172,4 +171,20 @@ func getFirstWikiParagraph(host, pageTitle string) (string, error) {
 
 func trimPageName(path string) string {
 	return path[len("/wiki/"):]
+}
+
+func fillSupportedWikis() {
+	file, err := ioutil.ReadFile("config/supported_wikis")
+	if err == nil {
+		json.Unmarshal(file, &wikis)
+	}
+}
+
+func getWikiInformationByUrl(url string) *Wiki {
+	for _, tmpWiki := range wikis {
+		if tmpWiki.URL == url {
+			return &tmpWiki
+		}
+	}
+	return nil
 }

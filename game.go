@@ -22,12 +22,15 @@ type Game struct {
 	// Name of the start and goal article of this game
 	Start string
 	Goal  string
+
+	// The language of that certain Game
+	WikiUrl string
 }
 
-func NewGame(hostingPlayerName, wikiHost string) *Game {
+func NewGame(hostingPlayerName string, wikiUrl string) *Game {
 	game := &Game{
 		Host:         hostingPlayerName,
-		WikiHost:     wikiHost,
+		WikiUrl:      wikiUrl,
 	}
 
 	game.AddPlayer(hostingPlayerName)
@@ -70,4 +73,3 @@ func (g *Game) HasPlayer(name string) bool {
 	}
 	return false
 }
-
