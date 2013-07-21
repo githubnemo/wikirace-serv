@@ -9,16 +9,15 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 )
 
 type Wiki struct {
-	Name, URL, RandomPage string
+	Name, URL, RandomPage, BodySelector string
 }
 
-var wikis []Wiki
+var wikis map[string]Wiki
 
 // Result type to pass over chan for concurrentHead()
 type headResult struct {
@@ -70,7 +69,7 @@ func buildWikiPageLink(url, page string) string {
 }
 
 func ServeWikiPage(url, page string, w http.ResponseWriter) {
-	content, err := rewriteWikiUrls(buildWikiPageLink(url, page))
+	content, err := rewriteWikiUrls(url, buildWikiPageLink(url, page))
 
 	if err != nil {
 		panic(err)
@@ -106,14 +105,8 @@ func DetermineStartAndGoal(url string) (string, string, error) {
 		nil
 }
 
-func rewriteWikiUrls(wikiUrl string) (string, error) {
-	doc, err := goquery.NewDocument(wikiUrl)
-
-	if err != nil {
-		return "", err
-	}
-
-	wpUrl, err := url.Parse(wikiUrl)
+func rewriteWikiUrls(wikiUrl, pageUrl string) (string, error) {
+	doc, err := goquery.NewDocument(pageUrl)
 
 	if err != nil {
 		return "", err
@@ -128,13 +121,15 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 
 		page := trimPageName(link)
 
-		setAttributeValue(e.Nodes[0], "href", serviceVisitUrl(wpUrl.Host, page))
+		setAttributeValue(e.Nodes[0], "href", serviceVisitUrl(page))
 	}
 
-	doc.Find("#bodyContent a").Each(hrefRewriter)
-	doc.Find("#bodyContent area").Each(hrefRewriter)
+	bodySelector := getWikiInformationByUrl(wikiUrl).BodySelector
 
-	content, err := doc.Find("#bodyContent").Html()
+	doc.Find(bodySelector + " a").Each(hrefRewriter)
+	doc.Find(bodySelector + " area").Each(hrefRewriter)
+
+	content, err := doc.Find(bodySelector).Html()
 
 	if err != nil {
 		return "", err
@@ -180,10 +175,11 @@ func trimPageName(path string) string {
 	return path[len("/wiki/"):]
 }
 
-func readSupportedWikis() ([]Wiki, error) {
-	var wikis []Wiki
+func readSupportedWikis() (map[string]Wiki, error) {
+	var wikis map[string]Wiki
 
 	file, err := ioutil.ReadFile("config/supported_wikis")
+
 	if err != nil {
 		return nil, err
 	}
@@ -194,14 +190,19 @@ func readSupportedWikis() ([]Wiki, error) {
 		return nil, err
 	}
 
+	// This looks broken and is really a workaround for go #3117
+	// which says that `wikis[url].URL = url` won't work.
+	for url, _ := range wikis {
+		w := wikis[url]
+		w.URL = url
+		wikis[url] = w
+	}
+
 	return wikis, nil
 }
 
 func getWikiInformationByUrl(url string) *Wiki {
-	for _, tmpWiki := range wikis {
-		if tmpWiki.URL == url {
-			return &tmpWiki
-		}
-	}
-	return nil
+	w := wikis[url]
+
+	return &w
 }

@@ -65,13 +65,13 @@ func decryptPage(input string) string {
 	return string(dst[:len(dst)-padding])
 }
 
-func serviceVisitUrl(wpHost, page string) string {
+func serviceVisitUrl(page string) string {
 	if len(page) == 0 {
 		panic("Empty page. This is quite likely a bug.")
 	}
 
 	page = encryptPage(page)
-	wpHost = url.QueryEscape(wpHost)
+
 	return "/visit?page=" + page
 }
 
@@ -349,7 +349,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	wikiUrl := serviceVisitUrl(game.WikiUrl, player.LastVisited())
+	wikiUrl := serviceVisitUrl(player.LastVisited())
 
 	templates.ExecuteTemplate(w, "game.html", struct {
 		Game    *Game

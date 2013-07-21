@@ -1,17 +1,17 @@
-[
-    {
+{
+    "https://en.wikipedia.org": {
         "Name": "Wikipedia English",
-        "URL": "https://en.wikipedia.org",
-        "RandomPage": "Special:Random"
+        "RandomPage": "Special:Random",
+        "BodySelector": "#bodyContent"
     },
-    {
+    "https://de.wikipedia.org": {
         "Name": "Wikipedia German",
-        "URL": "https://de.wikipedia.org",
-        "RandomPage": "Spezial:Zuf%C3%A4llige_Seite"
+        "RandomPage": "Spezial:Zuf%C3%A4llige_Seite",
+        "BodySelector": "#bodyContent"
     },
-    {
+    "https://tardis.wikia.com": {
         "Name": "Tardis Wiki",
-        "URL": "https://tardis.wikia.com",
-        "RandomPage": "Special:Random"
+        "RandomPage": "Special:Random",
+        "BodySelector": "#WikiaArticle"
     }
-]
+}
