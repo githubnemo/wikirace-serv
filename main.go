@@ -197,7 +197,9 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	game := NewGame(playerName)
 
-	start, goal, err := determineStartAndGoal()
+	host := "de.wikipedia.org"
+
+	start, goal, err := determineStartAndGoal(host)
 
 	if err != nil {
 		panic(err)

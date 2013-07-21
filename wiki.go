@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+var randomUrls = map[string]string {
+	"de.wikipedia.org": "http://de.wikipedia.org/wiki/Spezial:Zuf%C3%A4llige_Seite",
+}
+
 func setAttributeValue(n *html.Node, attrName, value string) error {
 	for i, a := range n.Attr {
 		if a.Key == attrName {
@@ -39,8 +43,8 @@ func serveWikiPage(host, page string, w http.ResponseWriter) {
 
 // Fetch two random pages from wikipedia and get the corresponding
 // page titles which will then represent the start and the goal of the game.
-func determineStartAndGoal() (string, string, error) {
-	const wpRandomUrl = "http://de.wikipedia.org/wiki/Spezial:Zuf%C3%A4llige_Seite"
+func determineStartAndGoal(host string) (string, string, error) {
+	wpRandomUrl := randomUrls[host]
 
 	sresp, err := http.Head(wpRandomUrl)
 
