@@ -11,8 +11,16 @@ import (
 	"strings"
 )
 
+
+// Links to the random functionality of the key wiki stored in the key.
 var randomUrls = map[string]string {
 	"de.wikipedia.org": "http://de.wikipedia.org/wiki/Spezial:Zuf%C3%A4llige_Seite",
+}
+
+// Wiki specific URL to access a page sorted by wiki host.
+// The page is concatenated at the end of the returned string.
+var wikiUrls = map[string]string {
+	"de.wikipedia.org": "http://de.wikipedia.org/wiki/",
 }
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
@@ -27,8 +35,20 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 	return fmt.Errorf("Didn't find attribute %s.\n", attrName)
 }
 
+func concurrentHead(url string) chan *headResult {
+	c := make(chan *headResult)
+
+	go func() {
+		res, err := http.Head(url)
+
+		c <- &headResult{res, err}
+	}()
+
+	return c
+}
+
 func buildWikiPageLink(host, page string) string {
-	return "http://" + host + "/wiki/" + page
+	return wikiUrls[host] + page
 }
 
 func serveWikiPage(host, page string, w http.ResponseWriter) {
@@ -117,8 +137,8 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 	return buf.String(), nil
 }
 
-func getFirstWikiParagraph(wikiUrl string) (string, error) {
-	doc, err := goquery.NewDocument(wikiUrl)
+func getFirstWikiParagraph(host, pageTitle string) (string, error) {
+	doc, err := goquery.NewDocument(buildWikiPageLink(host, pageTitle))
 
 	if err != nil {
 		return "", err

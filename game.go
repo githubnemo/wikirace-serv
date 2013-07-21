@@ -7,6 +7,9 @@ type Game struct {
 	// Name of the player who initiated the game
 	Host string
 
+	// Host of the wiki page that is used to get articles from
+	WikiHost string
+
 	// All players including the host
 	PlayerHashes []string
 
@@ -21,9 +24,10 @@ type Game struct {
 	Goal  string
 }
 
-func NewGame(hostingPlayerName string) *Game {
+func NewGame(hostingPlayerName, wikiHost string) *Game {
 	game := &Game{
 		Host:         hostingPlayerName,
+		WikiHost:     wikiHost,
 		PlayerHashes: []string{hostingPlayerName},
 	}
 

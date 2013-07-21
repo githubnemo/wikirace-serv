@@ -195,11 +195,10 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	// FIXME: overwrites running game
 
-	game := NewGame(playerName)
-
 	// TODO: make this selectable
-
 	host := "de.wikipedia.org"
+
+	game := NewGame(playerName, host)
 
 	start, goal, err := determineStartAndGoal(host)
 
@@ -334,13 +333,13 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	summary, err := getFirstWikiParagraph("http://de.wikipedia.org/wiki/" + game.Goal)
+	summary, err := getFirstWikiParagraph(game.WikiHost, game.Goal)
 
 	if err != nil {
 		summary = err.Error()
 	}
 
-	wikiUrl := serviceVisitUrl("de.wikipedia.org", session.LastVisited())
+	wikiUrl := serviceVisitUrl(game.WikiHost, session.LastVisited())
 
 	templates.ExecuteTemplate(w, "game.html", struct {
 		Game    *Game
