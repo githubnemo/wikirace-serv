@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type Wiki struct {
@@ -18,6 +19,19 @@ type Wiki struct {
 }
 
 var wikis []Wiki
+
+// Result type to pass over chan for concurrentHead()
+type headResult struct {
+	res *http.Response
+	err error
+}
+
+func init() {
+	// TODO: Make this somehow better perhaps? Less timeout? Think about this.
+	t := http.DefaultTransport.(*http.Transport)
+
+	t.ResponseHeaderTimeout = 10 * time.Second
+}
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
 	for i, a := range n.Attr {
@@ -29,6 +43,18 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 	}
 
 	return fmt.Errorf("Didn't find attribute %s.\n", attrName)
+}
+
+func concurrentHead(url string) chan *headResult {
+	c := make(chan *headResult)
+
+	go func() {
+		res, err := http.Head(url)
+
+		c <- &headResult{res, err}
+	}()
+
+	return c
 }
 
 func buildWikiPageLink(host, page string) string {
@@ -53,20 +79,23 @@ func determineStartAndGoal(host string) (string, string, error) {
 
 	fmt.Println(wpRandomUrl)
 
-	sresp, err := http.Head(wpRandomUrl)
+	c1 := concurrentHead(wpRandomUrl)
+	c2 := concurrentHead(wpRandomUrl)
 
-	if err != nil {
-		return "", "", err
+	sres := <-c1
+
+	if sres.err != nil {
+		return "", "", sres.err
 	}
 
-	gresp, err := http.Head(wpRandomUrl)
+	gres := <-c2
 
-	if err != nil {
-		return "", "", err
+	if gres.err != nil {
+		return "", "", gres.err
 	}
 
-	return trimPageName(sresp.Request.URL.Path),
-		trimPageName(gresp.Request.URL.Path),
+	return trimPageName(sres.res.Request.URL.Path),
+		trimPageName(gres.res.Request.URL.Path),
 		nil
 }
 
@@ -124,8 +153,8 @@ func rewriteWikiUrls(wikiUrl string) (string, error) {
 	return buf.String(), nil
 }
 
-func getFirstWikiParagraph(wikiUrl string) (string, error) {
-	doc, err := goquery.NewDocument(wikiUrl)
+func getFirstWikiParagraph(host, pageTitle string) (string, error) {
+	doc, err := goquery.NewDocument(buildWikiPageLink(host, pageTitle))
 
 	if err != nil {
 		return "", err

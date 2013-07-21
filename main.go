@@ -196,7 +196,6 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	wikiUrl := values.Get("wikiLanguage")
 
 	// FIXME: overwrites running game
-
 	game := NewGame(playerName, wikiUrl)
 
 	// TODO: make this selectable
@@ -336,9 +335,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	fmt.Println(game.WikiUrl + "/wiki/" + game.Goal)
-
-	summary, err := getFirstWikiParagraph(game.WikiUrl + "/wiki/" + game.Goal)
+	summary, err := getFirstWikiParagraph(game.WikiUrl, game.Goal)
 
 	if err != nil {
 		summary = err.Error()

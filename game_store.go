@@ -56,6 +56,8 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 		return game, nil
 	}
 
+	// Create empty game, values don't matter as they'll be
+	// overwritten by GetMarshal.
 	game := NewGame("", "")
 
 	err := g.GetMarshal(hash, game)
