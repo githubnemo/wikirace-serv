@@ -105,6 +105,28 @@ func DetermineStartAndGoal(url string) (string, string, error) {
 		nil
 }
 
+// Copied from goquery.Selection.Html().
+//
+// The original Html method missed to include the
+// selected element and only included the children.
+func htmlContent(sel *goquery.Selection) (ret string, e error) {
+	// Since there is no .innerHtml, the HTML content must be re-created from
+	// the nodes usint html.Render().
+	var buf bytes.Buffer
+
+	if len(sel.Nodes) > 0 {
+		for c := sel.Nodes[0]; c != nil; c = c.NextSibling {
+			e = html.Render(&buf, c)
+			if e != nil {
+				return
+			}
+		}
+		ret = buf.String()
+	}
+
+	return
+}
+
 func rewriteWikiUrls(wikiUrl, pageUrl string) (string, error) {
 	doc, err := goquery.NewDocument(pageUrl)
 
@@ -129,7 +151,7 @@ func rewriteWikiUrls(wikiUrl, pageUrl string) (string, error) {
 	doc.Find(bodySelector + " a").Each(hrefRewriter)
 	doc.Find(bodySelector + " area").Each(hrefRewriter)
 
-	content, err := doc.Find(bodySelector).Html()
+	content, err := htmlContent(doc.Find(bodySelector))
 
 	if err != nil {
 		return "", err
