@@ -12,6 +12,6 @@
     "https://tardis.wikia.com": {
         "Name": "Tardis Wiki",
         "RandomPage": "Special:Random",
-        "BodySelector": "#WikiaArticle"
+        "BodySelector": ".WikiaPageContentWrapper"
     }
 }
