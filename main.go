@@ -112,8 +112,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	page = decryptPage(page)
 	page, err = url.QueryUnescape(page)
 
-	page, err = url.QueryUnescape(page)
-
 	if err != nil {
 		panic(err)
 	}
@@ -130,17 +128,23 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	session.Visited(page)
-	session.Save(r, w)
+	player, err := PlayerFromSession(session)
+
+	if err != nil {
+		panic(err)
+	}
+
+	player.Visited(page)
 
 	// FIXME: this could be racy
 	if page == game.Goal {
 		// He reached the goal
 
 		// This one is the winner (for now)
-		if len(game.WinnerPath) == 0 || len(game.WinnerPath) > len(session.Visits()) {
-			game.Winner = session.PlayerName()
-			game.WinnerPath = session.Visits()
+		if len(game.WinnerPath) == 0 || len(game.WinnerPath) > len(player.Path) {
+			game.Winner = player.Name
+			game.WinnerPath = player.Path
+
 			err := gameStore.Save(game)
 
 			if err != nil {
@@ -154,23 +158,23 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 		templates.ExecuteTemplate(w, "win.html", struct {
 			Game            *Game
-			Session         *GameSession
+			Player          *Player
 			IsWinner        bool
 			WinningPageLink string
 		}{
 			game,
-			session,
-			game.Winner == session.PlayerName(),
+			player,
+			game.Winner == player.Name,
 			buildWikiPageLink(host, page),
 		})
 
 		return
 	}
 
-	msg := NewVisitMessage(session, page)
-	game.Broadcast(msg)
+	game.Broadcast(NewVisitMessage(session, page))
 
 	serveWikiPage(host, page, w)
+
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
 }
@@ -339,7 +343,13 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		summary = err.Error()
 	}
 
-	wikiUrl := serviceVisitUrl(game.WikiHost, session.LastVisited())
+	player, err := PlayerFromSession(session)
+
+	if err != nil {
+		panic(err)
+	}
+
+	wikiUrl := serviceVisitUrl(game.WikiHost, player.LastVisited())
 
 	templates.ExecuteTemplate(w, "game.html", struct {
 		Game    *Game

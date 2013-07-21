@@ -68,7 +68,16 @@ func NewLeaveMessage(session *GameSession) LeaveMessage {
 }
 
 func NewFinishMessage(session *GameSession) FinishMessage {
-	return FinishMessage{createMessage(finish, session.PlayerName(), session.PlayerName()), len(session.Visits())}
+	player, err := PlayerFromSession(session)
+
+	if err != nil {
+		// Attempt to create a finish message but the player does not
+		// exist in the session's game OR the game does not exist.
+		// Both conditions should've been handled before.
+		panic(err)
+	}
+
+	return FinishMessage{createMessage(finish, player.Name, player.Name), len(player.Path)}
 }
 
 func NewVisitMessage(session *GameSession, page string) VisitMessage {

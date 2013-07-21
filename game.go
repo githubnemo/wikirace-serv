@@ -11,7 +11,7 @@ type Game struct {
 	WikiHost string
 
 	// All players including the host
-	PlayerHashes []string
+	Players []Player
 
 	// The winner of the game. Empty if the game is not finished yet
 	Winner string
@@ -28,8 +28,9 @@ func NewGame(hostingPlayerName, wikiHost string) *Game {
 	game := &Game{
 		Host:         hostingPlayerName,
 		WikiHost:     wikiHost,
-		PlayerHashes: []string{hostingPlayerName},
 	}
+
+	game.AddPlayer(hostingPlayerName)
 
 	return game
 }
@@ -47,12 +48,23 @@ func (g *Game) Hash() string {
 }
 
 func (g *Game) AddPlayer(name string) {
-	g.PlayerHashes = append(g.PlayerHashes, name)
+	g.Players = append(g.Players, Player{
+		Name: name,
+	})
+}
+
+func (g *Game) GetPlayer(name string) *Player {
+	for _, e := range g.Players {
+		if e.Name == name {
+			return &e
+		}
+	}
+	return nil
 }
 
 func (g *Game) HasPlayer(name string) bool {
-	for _, e := range g.PlayerHashes {
-		if e == name {
+	for _, e := range g.Players {
+		if e.Name == name {
 			return true
 		}
 	}

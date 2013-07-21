@@ -18,13 +18,13 @@
 		</p>
 
 		<p>
-		Visits in total: {{len .Session.Visits}} <br>
+		Visits in total: {{len .Player.Path}} <br>
 		</p>
 
 		<p>
 		Path taken:
 		<ul>
-			{{range .Session.Visits}}
+			{{range .Player.Path}}
 			<li>{{.}}</li>
 			{{end}}
 		</ul>

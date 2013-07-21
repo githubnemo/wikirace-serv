@@ -10,6 +10,7 @@ type GameSessionStore struct {
 }
 
 func NewGameSessionStore() *GameSessionStore {
+	// FIXME: Configurable encryption key
 	var encryptionKey = "lirumlarum"
 
 	return &GameSessionStore{
@@ -29,14 +30,12 @@ type GameSession struct {
 func (s *GameSession) Init(player, game string) {
 	s.Values["hash"] = game
 	s.Values["name"] = player
-	s.Values["visits"] = []string{}
 	s.Values["initialized"] = true
 }
 
 func (s *GameSession) Invalidate() {
 	s.Values["hash"] = ""
 	s.Values["name"] = ""
-	s.Values["visits"] = []string{}
 	s.Values["initialized"] = false
 }
 
@@ -57,36 +56,6 @@ func (s *GameSession) PlayerName() string {
 
 func (s *GameSession) GameHash() string {
 	return s.Values["hash"].(string)
-}
-
-func (s *GameSession) Visits() []string {
-	return s.Values["visits"].([]string)
-}
-
-func (s *GameSession) LastVisited() string {
-	visits := s.Visits()
-
-	if len(visits) == 0 {
-		game, err := s.GetGame()
-
-		if err != nil {
-			// The session was not initialized properly
-			// or a bug happened.
-			panic(err)
-		}
-
-		return game.Start
-	}
-
-	return visits[len(visits)-1]
-}
-
-func (s *GameSession) Visited(page string) {
-	visits := s.Visits()
-
-	visits = append(visits, page)
-
-	s.Values["visits"] = visits
 }
 
 func (s *GameSession) GetGame() (*Game, error) {
