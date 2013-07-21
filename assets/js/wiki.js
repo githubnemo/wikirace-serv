@@ -13,6 +13,10 @@ $(document).ready(function() {
 		});
 	}
 
+	function logMessage(message) {
+		$('#log').append('<li>' + message + '</li>');
+	}
+
 	function visitHandler(message) {
 		var $elem = findPlayerElement(message["PlayerName"]).find(".visits");
 
@@ -27,16 +31,19 @@ $(document).ready(function() {
 
 	function joinHandler(message) {
 		getPlayerList().append(newPlayerElement(message["PlayerName"]));
+		logMessage(message["PlayerName"] + 'has joined game.');
 	}
 
 	function leaveHandler(message) {
 		findPlayerElement(message["PlayerName"]).remove();
+		logMessage(message["PlayerName"] + ' has left the game.');
 	}
 
 	function finishHandler(message) {
 		$("#dialog").text(message["PlayerName"] + " WINS").dialog({
 			title: "visit"
 		});
+		logMessage(message["PlayerName"] + ' won the game.');
 	}
 
 	function gameOverHandler(message) {
