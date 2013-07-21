@@ -197,7 +197,11 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	game := NewGame(playerName)
 
-	start, goal, err := determineStartAndGoal()
+	// TODO: make this selectable
+
+	host := "de.wikipedia.org"
+
+	start, goal, err := determineStartAndGoal(host)
 
 	if err != nil {
 		panic(err)
@@ -310,7 +314,9 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	// session valid but is another game -> overwrite game with new one
 	if session.IsInitialized() && len(gameId) > 0 {
-		if game, _ := session.GetGame(); game.Hash() != gameId {
+		if game, err := session.GetGame(); err != nil || game.Hash() != gameId {
+			// TODO: Log the phsyical loss of a game when err != nil
+
 			// TODO: warn about losing game
 			session.Invalidate()
 		}
