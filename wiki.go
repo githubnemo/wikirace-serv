@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"code.google.com/p/go.net/html"
 	"fmt"
+	"time"
 	"github.com/PuerkitoBio/goquery"
 	"html/template"
 	"net/http"
@@ -21,6 +22,19 @@ var randomUrls = map[string]string {
 // The page is concatenated at the end of the returned string.
 var wikiUrls = map[string]string {
 	"de.wikipedia.org": "http://de.wikipedia.org/wiki/",
+}
+
+// Result type to pass over chan for concurrentHead()
+type headResult struct {
+	res *http.Response
+	err error
+}
+
+func init() {
+	// TODO: Make this somehow better perhaps? Less timeout? Think about this.
+	t := http.DefaultTransport.(*http.Transport)
+
+	t.ResponseHeaderTimeout = 10 * time.Second
 }
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
@@ -66,20 +80,23 @@ func serveWikiPage(host, page string, w http.ResponseWriter) {
 func determineStartAndGoal(host string) (string, string, error) {
 	wpRandomUrl := randomUrls[host]
 
-	sresp, err := http.Head(wpRandomUrl)
+	c1 := concurrentHead(wpRandomUrl)
+	c2 := concurrentHead(wpRandomUrl)
 
-	if err != nil {
-		return "", "", err
+	sres := <-c1
+
+	if sres.err != nil {
+		return "", "", sres.err
 	}
 
-	gresp, err := http.Head(wpRandomUrl)
+	gres := <-c2
 
-	if err != nil {
-		return "", "", err
+	if gres.err != nil {
+		return "", "", gres.err
 	}
 
-	return trimPageName(sresp.Request.URL.Path),
-		trimPageName(gresp.Request.URL.Path),
+	return trimPageName(sres.res.Request.URL.Path),
+		trimPageName(gres.res.Request.URL.Path),
 		nil
 }
 
