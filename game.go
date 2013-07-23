@@ -54,9 +54,9 @@ func (g *Game) AddPlayer(name string) {
 }
 
 func (g *Game) GetPlayer(name string) *Player {
-	for _, e := range g.Players {
+	for i, e := range g.Players {
 		if e.Name == name {
-			return &e
+			return &g.Players[i]
 		}
 	}
 	return nil
