@@ -70,19 +70,16 @@ func SockServer(ws *websocket.Conn) {
 	inputChan := make(chan GameMessage)
 	sockCli := ClientConn{ws, clientIP, &inputChan}
 
-	// for loop so the websocket stays open otherwise
-	// it'll close after one Receieve and Send
-
 	request := ws.Request()
-	if sess, err := session.GetGameSession(request); err != nil {
-		log.Println("there is no game associated to this session, wad?")
-		return
+	sess, err := session.GetGameSession(request)
+
+	if err != nil {
+		panic("there is no game associated to this session, wad?")
 	} else {
 		game, err = sess.GetGame()
 
 		if err != nil {
-			log.Println("SocketServer: game not found", err)
-			return
+			panic("SocketServer: game not found: " + err.Error())
 		}
 	}
 
@@ -90,6 +87,16 @@ func SockServer(ws *websocket.Conn) {
 	ClientHandler.NewConnection(game, sockCli)
 
 	log.Println("client connect ...", clientIP)
+
+	player, err := PlayerFromSession(sess)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Schedule sending the broadcast as the listener
+	// is the for loop below.
+	go game.Broadcast(NewJoinMessage(player))
 
 	// cleanup on server side
 	defer func() {
@@ -100,6 +107,8 @@ func SockServer(ws *websocket.Conn) {
 		}
 	}()
 
+	// for loop so the websocket stays open otherwise
+	// it'll close after one Receieve and Send
 	for {
 		select {
 		case msg := <-inputChan:
@@ -107,7 +116,7 @@ func SockServer(ws *websocket.Conn) {
 			res, err := json.Marshal(msg)
 
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("error encoding message: ", msg, err)
 			}
 
 			if err = Message.Send(ws, string(res)); err != nil {

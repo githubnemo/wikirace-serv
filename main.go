@@ -290,9 +290,6 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	gameStore.Save(game)
 
 	http.Redirect(w, r, "/game?id="+gameId, 301)
-
-	msg := NewJoinMessage(session.PlayerName())
-	game.Broadcast(msg)
 }
 
 // Serve game content

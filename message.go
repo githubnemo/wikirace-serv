@@ -30,6 +30,7 @@ func (p *BaseGameMessage) Message() string {
 
 type JoinMessage struct {
 	*BaseGameMessage
+	Player *Player
 }
 
 type LeaveMessage struct {
@@ -59,8 +60,8 @@ func createMessage(typeNum int, playername, message string) *BaseGameMessage {
 	return &BaseGameMessage{playername, message, typeNum}
 }
 
-func NewJoinMessage(playername string) JoinMessage {
-	return JoinMessage{createMessage(join, playername, "joined")}
+func NewJoinMessage(player *Player) JoinMessage {
+	return JoinMessage{createMessage(join, player.Name, "joined"), player}
 }
 
 func NewLeaveMessage(session *GameSession) LeaveMessage {

@@ -17,21 +17,37 @@ $(document).ready(function() {
 		$('#log').append('<li>' + message + '</li>');
 	}
 
+	function getPlayerVisits(playerName) {
+		var $elem = findPlayerElement(playerName).find(".visits");
+
+		return parseInt($elem.text());
+	}
+
+	function setPlayerVisits(playerName, visits) {
+		findPlayerElement(playerName).find(".visits").text(visits);
+	}
+
 	function visitHandler(message) {
-		var $elem = findPlayerElement(message["PlayerName"]).find(".visits");
+		console.log(getPlayerVisits(message["PlayerName"]));
 
-		var cur = parseInt($elem.text());
-
-		if (isNaN(cur)) {
-			$elem.text("1");
-		} else {
-			$elem.text(cur + 1);
-		}
+		setPlayerVisits(message["PlayerName"], getPlayerVisits(message["PlayerName"]) + 1);
 	}
 
 	function joinHandler(message) {
-		getPlayerList().append(newPlayerElement(message["PlayerName"]));
-		logMessage(message["PlayerName"] + 'has joined game.');
+		var player = message["Player"];
+
+		// Player already in list, is no new join.
+		if (findPlayerElement(player["Name"]).length > 0) {
+			return;
+		}
+
+		getPlayerList().append(newPlayerElement(player["Name"]));
+
+		var visits = player["Path"] === null ? 1 : player["Path"].length;
+
+		setPlayerVisits(player["Name"], visits);
+
+		logMessage(player["Name"] + 'has joined game.');
 	}
 
 	function leaveHandler(message) {
@@ -65,12 +81,6 @@ $(document).ready(function() {
 		return location.host;
 	}
 
-	function parseMessage(rawMessage) {
-		var msg = JSON.parse(rawMessage);
-
-		return msg;
-	}
-
 	function handleMessage(message) {
 		messageHandler[message.Type](message)
 	}
@@ -86,8 +96,7 @@ $(document).ready(function() {
 	sock.onmessage = function(m) {
 		console.log(m.data);
 
-		handleMessage(parseMessage(m.data));
-		//$('#log').append('<li>' + msg + ' clicked on ' + msg.Message + '</li>');
+		handleMessage(JSON.parse(m.data));
 	}
 
 	sock.onerror = function(m) {
