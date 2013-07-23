@@ -7,9 +7,6 @@ type Game struct {
 	// Name of the player who initiated the game
 	Host string
 
-	// Host of the wiki page that is used to get articles from
-	WikiHost string
-
 	// All players including the host
 	Players []Player
 
