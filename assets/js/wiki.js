@@ -27,27 +27,30 @@ $(document).ready(function() {
 		findPlayerElement(playerName).find(".visits").text(visits);
 	}
 
+	function pathLength(path) {
+		return path === null ? 0 : path.length;
+	}
+
 	function visitHandler(message) {
 		console.log(getPlayerVisits(message["PlayerName"]));
 
-		setPlayerVisits(message["PlayerName"], getPlayerVisits(message["PlayerName"]) + 1);
+		setPlayerVisits(message["PlayerName"], pathLength(message["Player"]["Path"]));
 	}
 
 	function joinHandler(message) {
 		var player = message["Player"];
 
-		// Player already in list, is no new join.
-		if (findPlayerElement(player["Name"]).length > 0) {
-			return;
+		// Player not in list, add him and print to log.
+		if (findPlayerElement(player["Name"]).length == 0) {
+			getPlayerList().append(newPlayerElement(player["Name"]));
+
+			logMessage(player["Name"] + 'has joined game.');
 		}
 
-		getPlayerList().append(newPlayerElement(player["Name"]));
-
-		var visits = player["Path"] === null ? 1 : player["Path"].length;
-
-		setPlayerVisits(player["Name"], visits);
-
-		logMessage(player["Name"] + 'has joined game.');
+		// Update the player's visits in any case (see #4).
+		// This prevents a race between the template and the websocket
+		// connection.
+		setPlayerVisits(player["Name"], pathLength(player["Path"]));
 	}
 
 	function leaveHandler(message) {

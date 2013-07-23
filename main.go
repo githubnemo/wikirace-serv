@@ -170,7 +170,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	game.Broadcast(NewVisitMessage(session, page))
+	game.Broadcast(NewVisitMessage(session, page, player))
 
 	ServeWikiPage(game.WikiUrl, page, w)
 

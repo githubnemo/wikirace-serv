@@ -39,6 +39,7 @@ type LeaveMessage struct {
 
 type VisitMessage struct {
 	*BaseGameMessage
+	Player *Player
 }
 
 type FinishMessage struct {
@@ -53,8 +54,6 @@ type GameOverMessage struct {
 type FatalStuffMessage struct {
 	*BaseGameMessage
 }
-
-// TODO: Does this work with type aliases as well?
 
 func createMessage(typeNum int, playername, message string) *BaseGameMessage {
 	return &BaseGameMessage{playername, message, typeNum}
@@ -78,11 +77,17 @@ func NewFinishMessage(session *GameSession) FinishMessage {
 		panic(err)
 	}
 
-	return FinishMessage{createMessage(finish, player.Name, player.Name), len(player.Path)}
+	return FinishMessage{
+		createMessage(finish, player.Name, player.Name),
+		len(player.Path),
+	}
 }
 
-func NewVisitMessage(session *GameSession, page string) VisitMessage {
-	return VisitMessage{createMessage(visit, session.PlayerName(), page)}
+func NewVisitMessage(session *GameSession, page string, player *Player) VisitMessage {
+	return VisitMessage{
+		createMessage(visit, session.PlayerName(), page),
+		player,
+	}
 }
 
 func NewGameOverMessage(session *GameSession) GameOverMessage {
