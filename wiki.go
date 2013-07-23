@@ -127,6 +127,7 @@ func htmlContent(sel *goquery.Selection) (ret string, e error) {
 	return
 }
 
+// TODO: Remove links from images
 func rewriteWikiUrls(wikiUrl, pageUrl string) (string, error) {
 	doc, err := goquery.NewDocument(pageUrl)
 
