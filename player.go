@@ -7,7 +7,7 @@ import (
 type Player struct {
 	Path     []string
 	Name     string
-	Session  *GameSession
+	Session  *GameSession `json:"-"`
 
 	game     *Game
 }
