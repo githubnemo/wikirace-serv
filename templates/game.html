@@ -35,7 +35,7 @@
         <b>Players:</b><br />
         <ul id="players">
             {{range .Game.Players}}
-            <li data-player="{{.Name}}">{{.Name}} (<span class="visits"></span>)</li>
+            <li data-player="{{.Name}}">{{.Name}} (<span class="visits">{{len .Path}}</span>)</li>
             {{end}}
         </ul>
 
