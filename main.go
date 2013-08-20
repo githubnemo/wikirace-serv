@@ -277,8 +277,6 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 
 	game.AddPlayer(playerName)
-
-	// FIXME: racy
 	gameStore.Save(game)
 
 	http.Redirect(w, r, "/game?id="+gameId, 301)

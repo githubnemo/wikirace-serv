@@ -28,6 +28,9 @@ type Game struct {
 
 	// Lock for Winner / WinnerPath
 	winnerLock sync.RWMutex
+
+	// Lock for Players
+	playerLock sync.RWMutex
 }
 
 func NewGame(hostingPlayerName string, wikiUrl string) *Game {
@@ -54,12 +57,18 @@ func (g *Game) Hash() string {
 }
 
 func (g *Game) AddPlayer(name string) {
+	g.playerLock.Lock()
+	defer g.playerLock.Unlock()
+
 	g.Players = append(g.Players, Player{
 		Name: name,
 	})
 }
 
 func (g *Game) GetPlayer(name string) *Player {
+	g.playerLock.RLock()
+	defer g.playerLock.RUnlock()
+
 	for i, e := range g.Players {
 		if e.Name == name {
 			return &g.Players[i]
@@ -69,6 +78,9 @@ func (g *Game) GetPlayer(name string) *Player {
 }
 
 func (g *Game) HasPlayer(name string) bool {
+	g.playerLock.RLock()
+	defer g.playerLock.RUnlock()
+
 	for _, e := range g.Players {
 		if e.Name == name {
 			return true
