@@ -5,11 +5,11 @@ import (
 )
 
 type Player struct {
-	Path     []string
-	Name     string
-	Session  *GameSession `json:"-"`
+	Path    []string
+	Name    string
+	Session *GameSession `json:"-"`
 
-	game     *Game
+	game *Game
 }
 
 // Return the player from the game with the session assigned.

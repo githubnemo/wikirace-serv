@@ -26,8 +26,8 @@ type Game struct {
 
 func NewGame(hostingPlayerName string, wikiUrl string) *Game {
 	game := &Game{
-		Host:         hostingPlayerName,
-		WikiUrl:      wikiUrl,
+		Host:    hostingPlayerName,
+		WikiUrl: wikiUrl,
 	}
 
 	game.AddPlayer(hostingPlayerName)

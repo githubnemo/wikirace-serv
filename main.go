@@ -302,7 +302,6 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {

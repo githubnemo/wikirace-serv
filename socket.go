@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	JSON          = websocket.JSON           // codec for JSON
-	Message       = websocket.Message        // codec for string, []byte
+	JSON          = websocket.JSON                // codec for JSON
+	Message       = websocket.Message             // codec for string, []byte
 	ActiveClients = make(map[ClientConn]struct{}) // map containing clients
 
 	ClientHandler = SocketHandler(make(map[*Game]gameClients))
@@ -60,7 +60,6 @@ func (handler SocketHandler) NewConnection(game *Game, con ClientConn) {
 		ClientHandler[game][con] = struct{}{}
 	}
 }
-
 
 // WebSocket server to handle chat between clients
 func SockServer(ws *websocket.Conn) {
@@ -129,5 +128,3 @@ func SockServer(ws *websocket.Conn) {
 		}
 	}
 }
-
-
