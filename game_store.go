@@ -57,7 +57,8 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 	}
 
 	// Create empty game, values don't matter as they'll be
-	// overwritten by GetMarshal.
+	// overwritten by GetMarshal. What matters is the initialization
+	// of private members and start of go routines and such.
 	game := NewGame("", "")
 
 	err := g.GetMarshal(hash, game)

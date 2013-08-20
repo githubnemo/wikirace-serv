@@ -135,23 +135,15 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	player.Visited(page)
 
-	// FIXME: this could be racy
+	// He reached the goal
 	if page == game.Goal {
-		// He reached the goal
 
-		// This one is the winner (for now)
-		if len(game.WinnerPath) == 0 || len(game.WinnerPath) > len(player.Path) {
-			game.Winner = player.Name
-			game.WinnerPath = player.Path
+		isWinner, isTemporaryWinner := game.EvaluateWinner(player)
 
-			err := gameStore.Save(game)
-
-			if err != nil {
-				panic(err)
-			}
-
-			// TODO: detect actual game win (not only temporary win)
-
+		switch {
+		case isWinner:
+			game.Broadcast(GameMessage(NewGameOverMessage(session)))
+		case isTemporaryWinner:
 			game.Broadcast(GameMessage(NewFinishMessage(session)))
 		}
 
