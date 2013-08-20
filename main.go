@@ -302,7 +302,6 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// TODO: session valid but game inexistant -> invalidate session
 
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
@@ -312,12 +311,28 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	gameId := values.Get("id")
 
-	// session valid but is another game -> overwrite game with new one
+	// The session is valid but the game is inexistant or does not
+	// match the game hash stored in the session. This can have the
+	// following reasons:
+	//
+	// 1. The user came here from another game
+	// 2. The game does not exist on the server (anymore)
+	// 3. The user forged the session
+	//
+	// We do not support multiple games at once at this moment,
+	// therefore all cases invalidate the session. The UI should
+	// warn the user and make a check before submitting to the
+	// server.
+	//
+	// TODO: Implement check in UI
 	if session.IsInitialized() && len(gameId) > 0 {
 		if game, err := session.GetGame(); err != nil || game.Hash() != gameId {
-			// TODO: Log the phsyical loss of a game when err != nil
+			// Log the (assumed) physical loss of a game when err != nil.
+			// We can't know if we actually lost a game so better be safe.
+			if err != nil {
+				log.Printf("Game with hash %s was requested by %#v but not found on disk!", gameId, session)
+			}
 
-			// TODO: warn about losing game
 			session.Invalidate()
 		}
 	}
@@ -338,6 +353,8 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		summary = err.Error()
+
+		log.Printf("Error fetching summary for game %#v: %s\n", game, err)
 	}
 
 	player, err := PlayerFromSession(session)
