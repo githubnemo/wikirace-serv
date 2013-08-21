@@ -1,13 +1,9 @@
 package main
 
 import (
-	"crypto/cipher"
-	"crypto/des"
-	"encoding/base64"
 	"fmt"
 	"html/template"
 	"log"
-	"math"
 	"net/http"
 	"net/url"
 	"runtime/debug"
@@ -18,59 +14,16 @@ var (
 	session    *GameSessionStore
 	gameStore  *GameStore
 	templates  *template.Template
-	pageCipher cipher.Block
+	pageCipher *PageCipher
 )
 
-// pad the input bytes and return the amount of padded bytes
-func pad(in []byte, sz int) (padded []byte, bytes int) {
-	padded = in
-
-	if len(in)%sz != 0 {
-		newLen := int(float64(sz) * math.Ceil(float64(len(in))/float64(sz)))
-		padded = make([]byte, newLen)
-
-		bytes = newLen - len(in)
-		copy(padded, in)
-	}
-
-	return padded, bytes
-}
-
-func encryptPage(page string) string {
-	dst, padding := pad([]byte(page), pageCipher.BlockSize())
-
-	pageCipher.Encrypt(dst, dst)
-
-	return fmt.Sprintf("%d:%s", padding, base64.URLEncoding.EncodeToString(dst))
-}
-
-func decryptPage(input string) string {
-	var padding int
-	var b64page string
-
-	_, err := fmt.Sscanf(input, "%d:%s", &padding, &b64page)
-
-	if err != nil {
-		panic(err)
-	}
-
-	dst, err := base64.URLEncoding.DecodeString(b64page)
-
-	if err != nil {
-		panic(err)
-	}
-
-	pageCipher.Decrypt(dst, dst)
-
-	return string(dst[:len(dst)-padding])
-}
 
 func serviceVisitUrl(page string) string {
 	if len(page) == 0 {
 		panic("Empty page. This is quite likely a bug.")
 	}
 
-	page = encryptPage(page)
+	page = pageCipher.EncryptPage(page)
 
 	return "/visit?page=" + page
 }
@@ -108,7 +61,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	page := values.Get("page")
 
-	page = decryptPage(page)
+	page = pageCipher.DecryptPage(page)
 	page, err = url.QueryUnescape(page)
 
 	if err != nil {
@@ -385,6 +338,7 @@ func reloadHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Reload OK.")
 }
 
+
 // TODO: Player leave messages
 
 // Game initialization:
@@ -408,7 +362,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pageCipher, err = des.NewCipher([]byte("lirumlar"))
+	pageCipher, err = setupPageCipher()
 
 	if err != nil {
 		log.Fatal(err)
