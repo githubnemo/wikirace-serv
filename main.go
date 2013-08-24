@@ -358,7 +358,7 @@ func setupPageCipher() (*PageCipher, error) {
 
 			defer file.Close()
 
-			_, err = io.CopyN(file, rand.Reader, 8)
+			_, err = io.CopyN(file, rand.Reader, PAGE_CIPHER_KEY_LENGTH)
 
 			if err != nil {
 				return nil, err

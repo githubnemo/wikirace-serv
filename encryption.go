@@ -8,6 +8,7 @@ import (
 	"math"
 )
 
+const PAGE_CIPHER_KEY_LENGTH = 8
 
 // pad the input bytes and return the amount of padded bytes
 func pad(in []byte, sz int) (padded []byte, bytes int) {
