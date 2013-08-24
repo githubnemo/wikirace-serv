@@ -168,6 +168,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
+	fmt.Fprintf(w, "Player dump: %#v\n", player)
 }
 
 // start game session
@@ -358,7 +359,8 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		Game    *Game
 		Summary string
 		WikiURL string
-	}{game, summary, wikiUrl})
+		Player  *Player
+	}{game, summary, wikiUrl, player})
 }
 
 // Serves initial page

@@ -32,7 +32,7 @@ $(document).ready(function() {
 	}
 
 	function visitHandler(message) {
-		console.log(getPlayerVisits(message["PlayerName"]));
+		$('#pageTitle').text(message["Player"]["Path"][message["Player"]["Path"].length-1]);
 
 		setPlayerVisits(message["PlayerName"], pathLength(message["Player"]["Path"]));
 	}
