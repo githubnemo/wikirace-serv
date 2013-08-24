@@ -41,8 +41,8 @@ type Game struct {
 // to save this game.
 func NewGame(hostingPlayerName string, wikiUrl string, saveHandler func(*Game)) *Game {
 	game := &Game{
-		Host:          hostingPlayerName,
-		WikiUrl:       wikiUrl,
+		Host:    hostingPlayerName,
+		WikiUrl: wikiUrl,
 	}
 
 	game.AddPlayer(hostingPlayerName)
@@ -119,8 +119,16 @@ func (g *Game) evaluateWinner(player *Player) (isWinner, isTempWinner bool) {
 
 	isTempWinner = len(g.WinnerPath) == 0 || len(g.WinnerPath) > len(player.Path)
 
-	// TODO: check if full winner
-	isWinner = false
+	isWinner = true
+
+	// The player is NOT the full winner if there is a player with a shorter
+	// path.
+	for _, p := range g.Players {
+		if len(p.Path) < len(player.Path) && !player.LeftGame {
+			isWinner = false
+			break
+		}
+	}
 
 	return
 }
