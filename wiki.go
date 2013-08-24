@@ -69,7 +69,16 @@ func buildWikiPageLink(url, page string) string {
 }
 
 func ServeWikiPage(url, page string, w http.ResponseWriter) {
-	content, err := rewriteWikiUrls(url, buildWikiPageLink(url, page))
+	doc, err := goquery.NewDocument(buildWikiPageLink(url, page))
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Links are not clickable as they don't link to a page.
+	removeLinksFromImages(doc, url)
+
+	content, err := rewriteWikiUrls(doc, url)
 
 	if err != nil {
 		panic(err)
@@ -127,14 +136,24 @@ func htmlContent(sel *goquery.Selection) (ret string, e error) {
 	return
 }
 
-// TODO: Remove links from images
-func rewriteWikiUrls(wikiUrl, pageUrl string) (string, error) {
-	doc, err := goquery.NewDocument(pageUrl)
+func removeLinksFromImages(doc *goquery.Document, wikiUrl string) {
+	bodySelector := getWikiInformationByUrl(wikiUrl).BodySelector
 
-	if err != nil {
-		return "", err
+	imageRemover := func(i int, e *goquery.Selection) {
+		imageNode := e.Nodes[0]
+		anchorNode := imageNode.Parent
+		anchorParent := anchorNode.Parent
+
+		anchorParent.RemoveChild(anchorNode)
+		anchorNode.RemoveChild(imageNode)
+		anchorParent.AppendChild(imageNode)
 	}
 
+	doc.Find(bodySelector + " a > img").Each(imageRemover)
+}
+
+
+func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 	hrefRewriter := func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")
 
