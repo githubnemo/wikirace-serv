@@ -57,8 +57,8 @@ func (p PageCipher) DecryptPage(input string) string {
 	return string(dst[:len(dst)-padding])
 }
 
-func setupPageCipher() (*PageCipher, error) {
-	cipher, err := des.NewCipher([]byte("lirumlar"))
+func NewPageCipher(key []byte) (*PageCipher, error) {
+	cipher, err := des.NewCipher(key)
 
 	if err != nil {
 		return nil, err

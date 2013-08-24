@@ -2,11 +2,17 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"html/template"
 	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
+
+	"os"
+	"syscall"
+	"crypto/rand"
+	"io"
 )
 
 // Initialized in main()
@@ -144,9 +150,6 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	// FIXME: overwrites running game
 	game := NewGame(playerName, wikiUrl)
-
-	// TODO: make this selectable
-
 	host := game.WikiUrl
 
 	start, goal, err := DetermineStartAndGoal(host)
@@ -338,6 +341,35 @@ func reloadHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Reload OK.")
 }
 
+func setupPageCipher() (*PageCipher, error) {
+	key, err := ioutil.ReadFile("./config/key")
+
+	if err != nil {
+		if pe, ok := err.(*os.PathError); ok && pe.Err == syscall.ENOENT {
+			// Key not found, create a random key
+			file, err := os.OpenFile("./config/key", os.O_WRONLY|os.O_CREATE, 0600)
+
+			if err != nil {
+				// Give up in being convenient
+				return nil, err
+			}
+
+			defer file.Close()
+
+			_, err = io.CopyN(file, rand.Reader, 8)
+
+			if err != nil {
+				return nil, err
+			}
+
+			// Try once again to read the file
+			return setupPageCipher()
+		}
+		return nil, err
+	}
+
+	return NewPageCipher(key)
+}
 
 // TODO: Player leave messages
 
