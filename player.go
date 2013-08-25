@@ -5,9 +5,10 @@ import (
 )
 
 type Player struct {
-	Path    []string
-	Name    string
-	Session *GameSession `json:"-"`
+	Path     []string
+	Name     string
+	Session  *GameSession `json:"-"`
+	LeftGame bool
 
 	game *Game
 }
