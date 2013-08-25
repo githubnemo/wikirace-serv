@@ -1,6 +1,7 @@
 package main
 
 import "sync"
+import "sort"
 
 type Game struct {
 	// Cache for the game hash
@@ -101,6 +102,12 @@ func (g *Game) HasPlayer(name string) bool {
 		}
 	}
 	return false
+}
+
+func (g *Game) SortedPlayers() []Player {
+	sort.Sort(SortablePlayers(g.Players))
+
+	return g.Players
 }
 
 func (g *Game) setWinner(player *Player) {

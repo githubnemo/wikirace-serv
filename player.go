@@ -46,3 +46,9 @@ func (p *Player) LastVisited() string {
 
 	return visits[len(visits)-1]
 }
+
+type SortablePlayers []Player
+
+func (p SortablePlayers) Len() int           { return len(p) }
+func (p SortablePlayers) Less(i, j int) bool { return len(p[i].Path) < len(p[j].Path) }
+func (p SortablePlayers) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }

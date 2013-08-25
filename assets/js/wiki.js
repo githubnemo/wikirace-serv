@@ -3,6 +3,19 @@ $(document).ready(function() {
 		return $("#sidebar #players");
 	}
 
+	// [[Name1, Visits1, $(playerElement1)], ...]
+	function getPlayerListArray() {
+		return getPlayerList().find('li').map(function (i, e) {
+			var $this = $(this);
+
+			return {
+				name: $this.data('player'),
+				visits: parseInt($this.find('.visits').text()),
+				elem: $this
+			};
+		});
+	}
+
 	function newPlayerElement(name) {
 		return $('<li data-player="'+name+'">'+name+' (<span class="visits"></span>)</li>');
 	}
@@ -31,10 +44,67 @@ $(document).ready(function() {
 		return path === null ? 0 : path.length;
 	}
 
+	function indexOf(arr, cmp) {
+		for (var i = 0; i < arr.length; i++) {
+			if (cmp(arr[i])) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	// http://stackoverflow.com/a/698440/1643939
+	function swapNodes(a, b) {
+		var aparent = a.parentNode;
+		var asibling = a.nextSibling === b ? a : a.nextSibling;
+		b.parentNode.insertBefore(a, b);
+		aparent.insertBefore(b, asibling);
+	}
+
+	// Sorts the new player visit count for player `name` in
+	// the player list so that the list of players is sorted by
+	// the visit count in ascending order. Also animations.
+	//
+	// It is vital that the list of players IS ALREADY sorted.
+	function sortNewPlayerVisits(name) {
+		var unsorted = getPlayerListArray().toArray();
+
+		var nameIndex = indexOf(unsorted, function (e) {
+			return e.name == name;
+		});
+
+		var beforeIndex = 0;
+
+		// Find first player with less visits than that of this player.
+		// (Insertion sort).
+		for (beforeIndex = 0; beforeIndex < unsorted.length; beforeIndex++) {
+			if (unsorted[beforeIndex].visits < unsorted[nameIndex].visits) {
+				break;
+			}
+		}
+
+		// Nothing to do, all sorted well.
+		if (beforeIndex - 1 == nameIndex) {
+			return
+		}
+
+		// Move the element from where it was to the new position in a fancy way.
+		var $nameElem = unsorted[nameIndex].elem;
+		var $beforeElem = unsorted[beforeIndex].elem;
+
+		$nameElem.fadeOut(function () {
+			$nameElem.insertBefore($beforeElem);
+
+			$nameElem.fadeIn();
+		});
+	}
+
 	function visitHandler(message) {
 		$('#pageTitle').text(message["Player"]["Path"][message["Player"]["Path"].length-1]);
 
 		setPlayerVisits(message["PlayerName"], pathLength(message["Player"]["Path"]));
+
+		sortNewPlayerVisits(message["PlayerName"]);
 	}
 
 	function joinHandler(message) {
