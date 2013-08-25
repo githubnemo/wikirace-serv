@@ -49,6 +49,19 @@ func (g *GameStore) Save(game *Game) error {
 	return g.PutMarshal(game.Hash(), game)
 }
 
+func (g *GameStore) gameSaveHandler(game *Game) {
+	err := gameStore.PutMarshal(game.Hash(), game)
+
+	if err != nil {
+		// TODO: proper error handling
+		panic(err)
+	}
+}
+
+func (g *GameStore) NewGame(hostingPlayerName string, wikiUrl string) *Game {
+	return NewGame(hostingPlayerName, wikiUrl, g.gameSaveHandler)
+}
+
 // Only one (pooled) instance of a game instance is returned.
 // The key has to be present.
 func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
@@ -59,7 +72,7 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 	// Create empty game, values don't matter as they'll be
 	// overwritten by GetMarshal. What matters is the initialization
 	// of private members and start of go routines and such.
-	game := NewGame("", "")
+	game := g.NewGame("", "")
 
 	err := g.GetMarshal(hash, game)
 

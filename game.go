@@ -31,9 +31,15 @@ type Game struct {
 
 	// Lock for Players
 	playerLock sync.RWMutex
+
+	// Called every time changes that are worth saving to disk are made
+	saveHandler func(*Game)
 }
 
-func NewGame(hostingPlayerName string, wikiUrl string) *Game {
+// Usually not called directly as the save handler is relevant to the
+// game store which gets notified through the saveHandler that it is time
+// to save this game.
+func NewGame(hostingPlayerName string, wikiUrl string, saveHandler func(*Game)) *Game {
 	game := &Game{
 		Host:          hostingPlayerName,
 		WikiUrl:       wikiUrl,
@@ -42,6 +48,12 @@ func NewGame(hostingPlayerName string, wikiUrl string) *Game {
 	game.AddPlayer(hostingPlayerName)
 
 	return game
+}
+
+func (g *Game) save() {
+	if g.saveHandler != nil {
+		g.saveHandler(g)
+	}
 }
 
 func (g *Game) Broadcast(msg GameMessage) {
@@ -63,6 +75,8 @@ func (g *Game) AddPlayer(name string) {
 	g.Players = append(g.Players, Player{
 		Name: name,
 	})
+
+	g.save()
 }
 
 func (g *Game) GetPlayer(name string) *Player {
@@ -95,6 +109,8 @@ func (g *Game) setWinner(player *Player) {
 
 	g.Winner = player.Name
 	g.WinnerPath = player.Path
+
+	g.save()
 }
 
 func (g *Game) evaluateWinner(player *Player) (isWinner, isTempWinner bool) {

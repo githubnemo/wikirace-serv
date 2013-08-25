@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"runtime/debug"
 
-	"os"
-	"syscall"
 	"crypto/rand"
 	"io"
+	"os"
+	"syscall"
 )
 
 // Initialized in main()
@@ -22,7 +22,6 @@ var (
 	templates  *template.Template
 	pageCipher *PageCipher
 )
-
 
 func serviceVisitUrl(page string) string {
 	if len(page) == 0 {
@@ -150,7 +149,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	wikiUrl := values.Get("wikiLanguage")
 
 	// FIXME: overwrites running game
-	game := NewGame(playerName, wikiUrl)
+	game := gameStore.NewGame(playerName, wikiUrl)
 	host := game.WikiUrl
 
 	start, goal, err := DetermineStartAndGoal(host)
@@ -234,7 +233,6 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 
 	game.AddPlayer(playerName)
-	gameStore.Save(game)
 
 	http.Redirect(w, r, "/game?id="+gameId, 301)
 }
@@ -416,6 +414,4 @@ func main() {
 	http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("assets/img"))))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
-
-	// TODO: Save all active games.
 }
