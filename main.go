@@ -33,7 +33,7 @@ func serviceVisitUrl(page string) string {
 	return "/visit?page=" + page
 }
 
-func errorHandler(w http.ResponseWriter, r *http.Request) {
+func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
 		w.WriteHeader(401)
 
@@ -56,7 +56,7 @@ func errorHandler(w http.ResponseWriter, r *http.Request) {
 
 // Accepts visits and serves new wiki page
 func visitHandler(w http.ResponseWriter, r *http.Request) {
-	defer errorHandler(w, r)
+	defer commonErrorHandler(w, r)
 
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
@@ -129,6 +129,55 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Player dump: %#v\n", player)
 }
 
+type MessageGeneratorFunc func(error) string
+
+type ErrStartAndGoal error
+type ErrMalformedQuery error
+type ErrGameMarshal error
+type ErrGetGameSession error
+type ErrGetGame error
+type ErrNoSuchGame string
+
+func (e ErrNoSuchGame) Error() string {
+	return "Game " + string(e) + " could not be found in game store."
+}
+
+func userFriendlyError(e error) string {
+	switch e.(type) {
+	case ErrStartAndGoal:
+		return "I could not find where the wiki is in the intertubes."
+	case ErrMalformedQuery:
+		return "The stuff you typed in the URI I don't understand."
+	case ErrGameMarshal:
+		return "I could not save th1s game! M4ybe m_ disks a-re f-f-f---aulll-.."
+	case ErrGetGameSession:
+		return "Tried to get your game session but failed. Maybe you threw away your cookies? Who would do that to his cookies?!"
+	case ErrNoSuchGame:
+		return "Pretty much what it says, there does not seem to be such a game. Maybe your game expired or there's an error on our side."
+	case ErrGetGame:
+		return "I failed to retrieve this game, maybe there's something wrong?"
+	}
+
+	// We don't know this error. Panic to let the commonErrorHandler handle
+	// this unknown error.
+	panic(e)
+}
+
+func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
+	if e, ok := recover().(error); ok && e != nil {
+		understandableErrorMessage := userFriendlyError(e)
+
+		templates.ExecuteTemplate(w, "error.html", struct {
+			ErrorMessage               string
+			UnderstandableErrorMessage string
+		}{e.Error(), understandableErrorMessage})
+
+	} else if e != nil {
+		// Re-panic as we haven't handled the error yet.
+		panic(e)
+	}
+}
+
 // start game session
 // params:
 // - your name
@@ -137,12 +186,13 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 // - start page
 // - end page
 func startHandler(w http.ResponseWriter, r *http.Request) {
-	defer errorHandler(w, r)
+	defer commonErrorHandler(w, r)
+	defer userFriendlyErrorHandler(w, r)
 
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {
-		panic(err)
+		panic(ErrMalformedQuery(err))
 	}
 
 	playerName := values.Get("playerName")
@@ -155,7 +205,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	start, goal, err := DetermineStartAndGoal(host)
 
 	if err != nil {
-		panic(err)
+		panic(ErrStartAndGoal(err))
 	}
 
 	game.Start = start
@@ -164,13 +214,13 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	err = gameStore.PutMarshal(game.Hash(), game)
 
 	if err != nil {
-		panic(err)
+		panic(ErrGameMarshal(err))
 	}
 
 	session, err := session.GetGameSession(r)
 
 	if err != nil {
-		panic(err)
+		panic(ErrGetGameSession(err))
 	}
 
 	// TODO: kill previous game with hash `session.Values["hash"]`
@@ -184,12 +234,13 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
-	defer errorHandler(w, r)
+	defer commonErrorHandler(w, r)
+	defer userFriendlyErrorHandler(w, r)
 
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {
-		panic(err)
+		panic(ErrMalformedQuery(err))
 	}
 
 	gameId := values.Get("id")
@@ -209,7 +260,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if game really exists
 	if !gameStore.Contains(gameId) {
-		panic("No such game")
+		panic(ErrNoSuchGame(gameId))
 	}
 
 	game, err := gameStore.GetGameByHash(gameId)
@@ -220,11 +271,14 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if player name is not taken
 	if game.HasPlayer(playerName) {
+		// TODO: User friendly error message, maybe redirect the
+		// player back to the login form and display a hint.
 		panic("Player name already taken.")
 	}
 
 	// Don't allow join when there's already a winner
 	if len(game.Winner) > 0 {
+		// TODO: user friendly error message. See TODO above.
 		panic("Game is locked as it has already a winner.")
 	}
 
@@ -239,7 +293,8 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 // Serve game content
 func gameHandler(w http.ResponseWriter, r *http.Request) {
-	defer errorHandler(w, r)
+	defer commonErrorHandler(w, r)
+	defer userFriendlyErrorHandler(w, r)
 
 	session, err := session.GetGameSession(r)
 
@@ -250,7 +305,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {
-		panic(err)
+		panic(ErrMalformedQuery(err))
 	}
 
 	gameId := values.Get("id")
@@ -290,7 +345,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 	game, err := session.GetGame()
 
 	if err != nil {
-		panic(err)
+		panic(ErrGetGame(err))
 	}
 
 	summary, err := GetFirstWikiParagraph(game.WikiUrl, game.Goal)
@@ -319,7 +374,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 // Serves initial page
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	defer errorHandler(w, r)
+	defer commonErrorHandler(w, r)
 	templates.ExecuteTemplate(w, "index.html", wikis)
 }
 
@@ -330,7 +385,7 @@ func parseTemplates() (err error) {
 }
 
 func reloadHandler(w http.ResponseWriter, r *http.Request) {
-	defer errorHandler(w, r)
+	defer commonErrorHandler(w, r)
 
 	err := parseTemplates()
 
