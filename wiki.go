@@ -172,7 +172,8 @@ func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 				Key: "style",
 				Val: "color: gray;",
 			})
-			setAttributeValue(e.Nodes[0], "href", "#")
+			setAttributeValue(e.Nodes[0], "href", "#" + link)
+			setAttributeValue(e.Nodes[0], "onClick", "javascript: alert('This link is not supported by wikiracer, thus it was disabled. If you feel this is an error, contact us. The original target was: "+link+"');")
 			return
 		}
 
