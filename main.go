@@ -32,19 +32,24 @@ func serviceVisitUrl(page string) string {
 	return "/visit?page=" + page
 }
 
+func mustParseQuery(q string) url.Values {
+	values, err := url.ParseQuery(q)
+
+	if err != nil {
+		panic(ErrMalformedQuery(err))
+	}
+
+	return values
+}
 
 // Accepts visits and serves new wiki page
 func visitHandler(w http.ResponseWriter, r *http.Request) {
-	values, err := url.ParseQuery(r.URL.RawQuery)
-
-	if err != nil {
-		panic(err)
-	}
+	values := mustParseQuery(r.URL.RawQuery)
 
 	page := values.Get("page")
 
 	page = pageCipher.DecryptPage(page)
-	page, err = url.QueryUnescape(page)
+	page, err := url.QueryUnescape(page)
 
 	if err != nil {
 		panic(err)
@@ -115,11 +120,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 // - start page
 // - end page
 func startHandler(w http.ResponseWriter, r *http.Request) {
-	values, err := url.ParseQuery(r.URL.RawQuery)
-
-	if err != nil {
-		panic(ErrMalformedQuery(err))
-	}
+	values := mustParseQuery(r.URL.RawQuery)
 
 	playerName := values.Get("playerName")
 	wikiUrl := values.Get("wikiLanguage")
@@ -160,11 +161,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
-	values, err := url.ParseQuery(r.URL.RawQuery)
-
-	if err != nil {
-		panic(ErrMalformedQuery(err))
-	}
+	values := mustParseQuery(r.URL.RawQuery)
 
 	gameId := values.Get("id")
 	playerName := values.Get("name")
@@ -222,12 +219,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	values, err := url.ParseQuery(r.URL.RawQuery)
-
-	if err != nil {
-		panic(ErrMalformedQuery(err))
-	}
-
+	values := mustParseQuery(r.URL.RawQuery)
 	gameId := values.Get("id")
 
 	// The session is valid but the game is inexistant or does not
