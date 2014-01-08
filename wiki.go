@@ -156,7 +156,18 @@ func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 	hrefRewriter := func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")
 
-		if !ok || !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":") {
+		if !ok {
+			return
+		}
+
+		// Disable unsupported links so that the user does not accidently
+		// clicks on these.
+		if !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":") {
+			e.Nodes[0].Attr = append(e.Nodes[0].Attr, html.Attribute{
+				Key: "style",
+				Val: "color: gray;",
+			})
+			setAttributeValue(e.Nodes[0], "href", "#")
 			return
 		}
 
