@@ -2,6 +2,7 @@ package main
 
 import "sync"
 import "sort"
+import "fmt"
 
 type Game struct {
 	// Cache for the game hash
@@ -166,4 +167,24 @@ func (g *Game) GetWinner() *Player {
 	}
 
 	return g.GetPlayer(g.Winner)
+}
+
+// Check whether the player can join this game or not.
+// Returns an error if he can't explaining the reason.
+func (game *Game) CanJoin(playerName string) error {
+
+	// Check if player name is not taken
+	if game.HasPlayer(playerName) {
+		// TODO: User friendly error message, maybe redirect the
+		// player back to the login form and display a hint.
+		return fmt.Errorf("Player name already taken.")
+	}
+
+	// Don't allow join when there's already a winner
+	if len(game.Winner) > 0 {
+		// TODO: user friendly error message. See TODO above.
+		return fmt.Errorf("Game is locked as it has already a winner.")
+	}
+
+	return nil
 }

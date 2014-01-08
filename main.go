@@ -191,17 +191,8 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// Check if player name is not taken
-	if game.HasPlayer(playerName) {
-		// TODO: User friendly error message, maybe redirect the
-		// player back to the login form and display a hint.
-		panic("Player name already taken.")
-	}
-
-	// Don't allow join when there's already a winner
-	if len(game.Winner) > 0 {
-		// TODO: user friendly error message. See TODO above.
-		panic("Game is locked as it has already a winner.")
+	if err := game.CanJoin(playerName); err != nil {
+		panic(err)
 	}
 
 	session := mustGetValidGameSession(r)
