@@ -124,7 +124,7 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 	playerName := values.Get("playerName")
 	wikiUrl := values.Get("wikiLanguage")
 
-	// FIXME: overwrites running game
+	// FIXME: overwrites running game of the player
 	game := gameStore.NewGame(playerName, wikiUrl)
 	host := game.WikiUrl
 

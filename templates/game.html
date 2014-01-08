@@ -9,8 +9,24 @@
 </head>
 <body>
 
-
-<div id="dialog" style="display: none;"></div>
+<!-- Give up modal -->
+<div class="modal fade" id="giveUpModal" tabindex="-1" role="dialog" aria-labelledby="giveUpLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="giveUpLabel">It's not to late yet!</h4>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to give up just now?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+        <button type="button" class="btn btn-primary btn-danger" data-dismiss="modal">Yes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="page-header">
   <h1>wikiracer! <small>by nemo and krizz</small></h1>
@@ -45,8 +61,11 @@
         <ol id="log">
         </ol>
 
-        <hr />
-        <a href="#" class="btn btn-danger">Give up!</a>
+		<hr />
+
+		<button class="btn btn-danger" data-toggle="modal" data-target="#giveUpModal">
+			Give up!
+		</button>
     </div>
 </div>
 
