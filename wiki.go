@@ -49,7 +49,12 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 		}
 	}
 
-	return fmt.Errorf("Didn't find attribute %s.\n", attrName)
+	n.Attr = append(n.Attr, html.Attribute{
+		Key: attrName,
+		Val: value,
+	})
+
+	return nil
 }
 
 func concurrentHead(url string) chan *headResult {
