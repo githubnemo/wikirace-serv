@@ -150,15 +150,11 @@ $(document).ready(function() {
 		5: fatalStuffHandler,
 	};
 
-	function getServerAddress() {
-		return location.host;
-	}
-
 	function handleMessage(message) {
 		messageHandler[message.Type](message)
 	}
 
-	var sock = new WebSocket("ws://"+getServerAddress()+"/client");
+	var sock = new WebSocket("ws://"+location.host+"/client");
 
 	console.log("Websocket - status: " + sock.readyState);
 
