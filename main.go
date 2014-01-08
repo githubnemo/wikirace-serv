@@ -33,26 +33,6 @@ func serviceVisitUrl(page string) string {
 	return "/visit?page=" + page
 }
 
-func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
-	if err := recover(); err != nil {
-		w.WriteHeader(401)
-
-		fmt.Fprintf(w, "Oh...:(\n\n")
-
-		if e, ok := err.(error); ok {
-			w.Write([]byte(e.Error()))
-			w.Write([]byte{'\n', '\n'})
-			w.Write(debug.Stack())
-		} else {
-			fmt.Fprintf(w, "%s\n\n%s\n", err, debug.Stack())
-		}
-
-		log.Println(
-			"panic catched:", err,
-			"\nRequest data:", r,
-			"\nStack:", string(debug.Stack()))
-	}
-}
 
 // Accepts visits and serves new wiki page
 func visitHandler(w http.ResponseWriter, r *http.Request) {
@@ -163,8 +143,33 @@ func userFriendlyError(e error) string {
 	panic(e)
 }
 
+func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
+	if err := recover(); err != nil {
+		w.WriteHeader(401)
+
+		fmt.Fprintf(w, "Oh...:(\n\n")
+
+		if e, ok := err.(error); ok {
+			w.Write([]byte(e.Error()))
+			w.Write([]byte{'\n', '\n'})
+			w.Write(debug.Stack())
+		} else {
+			fmt.Fprintf(w, "%s\n\n%s\n", err, debug.Stack())
+		}
+
+		log.Println(
+			"panic catched:", err,
+			"\nRequest data:", r,
+			"\nStack:", string(debug.Stack()))
+	}
+}
+
 func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
-	if e, ok := recover().(error); ok && e != nil {
+	// In case the error can't be handled in here fall back to the
+	// common error handler.
+	defer commonErrorHandler(w, r)
+
+	if e, ok := recover().(error); false && ok && e != nil {
 		understandableErrorMessage := userFriendlyError(e)
 
 		templates.ExecuteTemplate(w, "error.html", struct {
@@ -186,10 +191,14 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 // - start page
 // - end page
 func startHandler(w http.ResponseWriter, r *http.Request) {
-	defer commonErrorHandler(w, r)
 	defer userFriendlyErrorHandler(w, r)
 
+
+
 	values, err := url.ParseQuery(r.URL.RawQuery)
+
+	// FIXME FIXME FIXME should use commonErrorHandler
+	panic("FOOO")
 
 	if err != nil {
 		panic(ErrMalformedQuery(err))
