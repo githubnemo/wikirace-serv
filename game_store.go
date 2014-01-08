@@ -43,12 +43,6 @@ func (g *GameStore) NewGameHash(playerName string) (shash string) {
 	return shash
 }
 
-func (g *GameStore) Save(game *Game) error {
-	// TODO: remove from activeGames when ended
-
-	return g.PutMarshal(game.Hash(), game)
-}
-
 func (g *GameStore) gameSaveHandler(game *Game) {
 	err := gameStore.PutMarshal(game.Hash(), game)
 
