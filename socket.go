@@ -61,7 +61,12 @@ func (handler SocketHandler) NewConnection(game *Game, con ClientConn) {
 	}
 }
 
-// WebSocket server to handle chat between clients
+// WebSocket server to handle chat between clients.
+//
+// Accept incoming connections and associate the game session with the
+// connection. As the session information is encrypted we can be sure that
+// this is a valid player.
+//
 func SockServer(ws *websocket.Conn) {
 	var game *Game
 
