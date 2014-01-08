@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"crypto/cipher"
 	"crypto/des"
 	"encoding/base64"
+	"fmt"
 	"math"
 )
 
@@ -25,7 +25,7 @@ func pad(in []byte, sz int) (padded []byte, bytes int) {
 	return padded, bytes
 }
 
-type PageCipher struct{
+type PageCipher struct {
 	cipher.Block
 }
 

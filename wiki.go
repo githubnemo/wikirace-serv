@@ -152,7 +152,6 @@ func removeLinksFromImages(doc *goquery.Document, wikiUrl string) {
 	doc.Find(bodySelector + " a > img").Each(imageRemover)
 }
 
-
 func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 	hrefRewriter := func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")

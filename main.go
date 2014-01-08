@@ -117,7 +117,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Player dump: %#v\n", player)
 }
 
-
 // start game session
 // params:
 // - your name

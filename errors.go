@@ -2,12 +2,10 @@ package main
 
 import (
 	"fmt"
-	"runtime/debug"
-	"net/http"
 	"log"
+	"net/http"
+	"runtime/debug"
 )
-
-
 
 type ErrStartAndGoal error
 
@@ -19,13 +17,11 @@ type ErrGetGameSession error
 
 type ErrGetGame error
 
-
 type ErrNoSuchGame string
 
 func (e ErrNoSuchGame) Error() string {
 	return "Game " + string(e) + " could not be found in game store."
 }
-
 
 // Translate error object to user friendly message if possible.
 func userFriendlyError(e error) string {
@@ -49,8 +45,6 @@ func userFriendlyError(e error) string {
 	panic(e)
 }
 
-
-
 // Wrap error handling chain around a http.HandlerFunc.
 //
 // First errors are tried to be resolved to meaningful user friendly
@@ -64,7 +58,6 @@ func errorHandler(f http.HandlerFunc) http.HandlerFunc {
 		f(w, r)
 	}
 }
-
 
 func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
@@ -86,8 +79,6 @@ func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
 			"\nStack:", string(debug.Stack()))
 	}
 }
-
-
 
 func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 	// In case the error can't be handled in here fall back to the
@@ -113,5 +104,3 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 }
-
-
