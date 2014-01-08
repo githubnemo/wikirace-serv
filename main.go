@@ -36,8 +36,6 @@ func serviceVisitUrl(page string) string {
 
 // Accepts visits and serves new wiki page
 func visitHandler(w http.ResponseWriter, r *http.Request) {
-	defer commonErrorHandler(w, r)
-
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {
@@ -109,8 +107,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Player dump: %#v\n", player)
 }
 
-type MessageGeneratorFunc func(error) string
-
 type ErrStartAndGoal error
 type ErrMalformedQuery error
 type ErrGameMarshal error
@@ -143,6 +139,20 @@ func userFriendlyError(e error) string {
 	panic(e)
 }
 
+// Wrap error handling chain around a http.HandlerFunc.
+//
+// First errors are tried to be resolved to meaningful user friendly
+// messages in userFriendlyErrorHandler. In case that fails,
+// a second error handler, the commonErrorHandler kicks in and reports some
+// basic crash report.
+//
+func errorHandler(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer userFriendlyErrorHandler(w, r)
+		f(w, r)
+	}
+}
+
 func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
 		w.WriteHeader(401)
@@ -169,7 +179,13 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 	// common error handler.
 	defer commonErrorHandler(w, r)
 
-	if e, ok := recover().(error); false && ok && e != nil {
+	err := recover()
+
+	if err == nil {
+		return
+	}
+
+	if e, ok := err.(error); ok && e != nil {
 		understandableErrorMessage := userFriendlyError(e)
 
 		templates.ExecuteTemplate(w, "error.html", struct {
@@ -177,9 +193,9 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 			UnderstandableErrorMessage string
 		}{e.Error(), understandableErrorMessage})
 
-	} else if e != nil {
+	} else {
 		// Re-panic as we haven't handled the error yet.
-		panic(e)
+		panic(err)
 	}
 }
 
@@ -191,10 +207,6 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 // - start page
 // - end page
 func startHandler(w http.ResponseWriter, r *http.Request) {
-	defer userFriendlyErrorHandler(w, r)
-
-
-
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	// FIXME FIXME FIXME should use commonErrorHandler
@@ -243,9 +255,6 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func joinHandler(w http.ResponseWriter, r *http.Request) {
-	defer commonErrorHandler(w, r)
-	defer userFriendlyErrorHandler(w, r)
-
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
 	if err != nil {
@@ -302,9 +311,6 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 // Serve game content
 func gameHandler(w http.ResponseWriter, r *http.Request) {
-	defer commonErrorHandler(w, r)
-	defer userFriendlyErrorHandler(w, r)
-
 	session, err := session.GetGameSession(r)
 
 	if err != nil {
@@ -383,7 +389,6 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 // Serves initial page
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	defer commonErrorHandler(w, r)
 	templates.ExecuteTemplate(w, "index.html", wikis)
 }
 
@@ -394,8 +399,6 @@ func parseTemplates() (err error) {
 }
 
 func reloadHandler(w http.ResponseWriter, r *http.Request) {
-	defer commonErrorHandler(w, r)
-
 	err := parseTemplates()
 
 	if err != nil {
@@ -466,12 +469,12 @@ func main() {
 
 	gameStore = NewGameStore(NewStore("./games"))
 
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/reload", reloadHandler)
-	http.HandleFunc("/visit", visitHandler)
-	http.HandleFunc("/start", startHandler)
-	http.HandleFunc("/game", gameHandler)
-	http.HandleFunc("/join", joinHandler)
+	http.HandleFunc("/", errorHandler(indexHandler))
+	http.HandleFunc("/reload", errorHandler(reloadHandler))
+	http.HandleFunc("/visit", errorHandler(visitHandler))
+	http.HandleFunc("/start", errorHandler(startHandler))
+	http.HandleFunc("/game", errorHandler(gameHandler))
+	http.HandleFunc("/join", errorHandler(joinHandler))
 
 	http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(http.Dir("assets/js"))))
 	http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("assets/css"))))
