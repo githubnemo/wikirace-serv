@@ -117,9 +117,6 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 func startHandler(w http.ResponseWriter, r *http.Request) {
 	values, err := url.ParseQuery(r.URL.RawQuery)
 
-	// FIXME FIXME FIXME should use commonErrorHandler
-	panic("FOOO")
-
 	if err != nil {
 		panic(ErrMalformedQuery(err))
 	}
