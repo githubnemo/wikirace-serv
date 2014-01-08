@@ -42,6 +42,16 @@ func mustParseQuery(q string) url.Values {
 	return values
 }
 
+func mustGetValidGameSession(r *http.Request) *GameSession {
+	session, err := session.GetGameSession(r)
+
+	if err != nil || !session.IsInitialized() {
+		panic(ErrGetGameSession(err))
+	}
+
+	return session
+}
+
 // Accepts visits and serves new wiki page
 func visitHandler(w http.ResponseWriter, r *http.Request) {
 	values := mustParseQuery(r.URL.RawQuery)
@@ -55,11 +65,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	session, err := session.GetGameSession(r)
-
-	if err != nil || !session.IsInitialized() {
-		panic(fmt.Errorf("Invalid session, sorry :/ (Error: %v)", err))
-	}
+	session := mustGetValidGameSession(r)
 
 	game, err := session.GetGame()
 
@@ -146,10 +152,6 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := session.GetGameSession(r)
 
-	if err != nil {
-		panic(ErrGetGameSession(err))
-	}
-
 	// TODO: kill previous game with hash `session.Values["hash"]`
 
 	session.Init(playerName, game.Hash())
@@ -202,7 +204,8 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 		panic("Game is locked as it has already a winner.")
 	}
 
-	session, err := session.GetGameSession(r)
+	session := mustGetValidGameSession(r)
+
 	session.Init(playerName, gameId)
 	session.Save(r, w)
 
@@ -213,12 +216,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 // Serve game content
 func gameHandler(w http.ResponseWriter, r *http.Request) {
-	session, err := session.GetGameSession(r)
-
-	if err != nil {
-		panic(err)
-	}
-
+	session := mustGetValidGameSession(r)
 	values := mustParseQuery(r.URL.RawQuery)
 	gameId := values.Get("id")
 
