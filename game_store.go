@@ -44,6 +44,7 @@ func (g *GameStore) NewGameHash(playerName string) (shash string) {
 }
 
 func (g *GameStore) gameSaveHandler(game *Game) {
+	// Note that there is no lock needed here as PutMarshal works atomically.
 	err := gameStore.PutMarshal(game.Hash(), game)
 
 	if err != nil {

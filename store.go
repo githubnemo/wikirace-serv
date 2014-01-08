@@ -5,7 +5,10 @@ import (
 	"github.com/peterbourgon/diskv"
 )
 
-// Persistent storage with marhsalling
+// Persistent storage with marhsalling.
+//
+// All crucial actions on this store (Write, Erase, ...) are locked
+// and safe for concurrent access.
 type Store struct {
 	*diskv.Diskv
 }
