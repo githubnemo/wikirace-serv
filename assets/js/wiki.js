@@ -99,8 +99,14 @@ $(document).ready(function() {
 		});
 	}
 
+	function setPageTitle(text) {
+		// remove whitespace markup from wiki
+		text = text.replace("_", " ", "g");
+		$('#pageTitle').text(text);
+	}
+
 	function visitHandler(message) {
-		$('#pageTitle').text(message["Player"]["Path"][message["Player"]["Path"].length-1]);
+		setPageTitle(message["Player"]["Path"][message["Player"]["Path"].length-1]);
 
 		setPlayerVisits(message["PlayerName"], pathLength(message["Player"]["Path"]));
 
