@@ -157,6 +157,10 @@ func removeLinksFromImages(doc *goquery.Document, wikiUrl string) {
 	doc.Find(bodySelector + " a > img").Each(imageRemover)
 }
 
+func isUnsupportedLink(link string) bool {
+	return !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":")
+}
+
 func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 	hrefRewriter := func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")
@@ -165,9 +169,15 @@ func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 			return
 		}
 
+		if strings.HasPrefix(link, "#") {
+			// Do not rewrite fragment links on the same page as they are
+			// useful to the user.
+			return
+		}
+
 		// Disable unsupported links so that the user does not accidently
 		// clicks on these.
-		if !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":") {
+		if isUnsupportedLink(link) {
 			e.Nodes[0].Attr = append(e.Nodes[0].Attr, html.Attribute{
 				Key: "style",
 				Val: "color: gray;",
