@@ -2,3 +2,6 @@ body {
 	margin: 1em;
 }
 
+iframe {
+	border: solid 1px black;
+}
