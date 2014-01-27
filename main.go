@@ -277,12 +277,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "index.html", wikis)
 }
 
-func parseTemplates() (err error) {
-	templates, err = template.ParseGlob("templates/*.html")
-
-	return err
-}
-
 func reloadHandler(w http.ResponseWriter, r *http.Request) {
 	err := parseTemplates()
 
@@ -343,7 +337,7 @@ func main() {
 	err := parseTemplates()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Unable to parse templates: ", err)
 	}
 
 	pageCipher, err = setupPageCipher()
