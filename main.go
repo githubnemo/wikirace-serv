@@ -79,6 +79,10 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// TODO: Do not account visit when reloading the page.
+	// We have no real reason to count this as a re-visit and in case
+	// of a JS error or some incompatibility in the browser this will
+	// only frustrate.
 	player.Visited(page)
 
 	// He reached the goal
