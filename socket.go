@@ -17,9 +17,10 @@ var (
 
 // Client connection consists of the websocket and the client ip
 type ClientConn struct {
-	websocket *websocket.Conn
-	clientIP  string
-	inputChan *chan GameMessage
+	websocket   *websocket.Conn
+	clientIP    string
+	inputChan   *chan GameMessage
+	playerName  string
 }
 
 func init() {
@@ -35,6 +36,7 @@ func (handler SocketHandler) Broadcast(game *Game, msg GameMessage) {
 	clients := handler[game]
 
 	for client, _ := range clients {
+		msg.AddressTo(client.playerName)
 		*client.inputChan <- msg
 	}
 }
@@ -72,7 +74,6 @@ func SockServer(ws *websocket.Conn) {
 
 	clientIP := ws.Request().RemoteAddr
 	inputChan := make(chan GameMessage)
-	sockCli := ClientConn{ws, clientIP, &inputChan}
 
 	request := ws.Request()
 	sess, err := session.GetGameSession(request)
@@ -86,6 +87,8 @@ func SockServer(ws *websocket.Conn) {
 			panic("SocketServer: game not found: " + err.Error())
 		}
 	}
+
+	sockCli := ClientConn{ws, clientIP, &inputChan, sess.PlayerName()}
 
 	// Register client connection in global ClientHandler
 	ClientHandler.NewConnection(game, sockCli)

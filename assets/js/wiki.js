@@ -106,7 +106,9 @@ $(document).ready(function() {
 	}
 
 	function visitHandler(message) {
-		setPageTitle(message["Player"]["Path"][message["Player"]["Path"].length-1]);
+		if (message["PlayerName"] === message["RecipientName"]) {
+			setPageTitle(message["Player"]["Path"][message["Player"]["Path"].length-1]);
+		}
 
 		setPlayerVisits(message["PlayerName"], pathLength(message["Player"]["Path"]));
 
