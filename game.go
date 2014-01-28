@@ -1,8 +1,11 @@
 package main
 
-import "sync"
-import "sort"
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"sort"
+	"sync"
+)
 
 type Game struct {
 	// Cache for the game hash
@@ -43,8 +46,8 @@ type Game struct {
 // to save this game.
 func NewGame(hostingPlayerName string, wikiUrl string, saveHandler func(*Game)) *Game {
 	game := &Game{
-		Host:    hostingPlayerName,
-		WikiUrl: wikiUrl,
+		Host:        hostingPlayerName,
+		WikiUrl:     wikiUrl,
 		saveHandler: saveHandler,
 	}
 

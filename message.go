@@ -20,10 +20,10 @@ type GameMessage interface {
 }
 
 type BaseGameMessage struct {
-	RecipientName  string
-	PlayerName_    string `json:"PlayerName"`
-	Message_       string `json:"Message"`
-	Type           int
+	RecipientName string
+	PlayerName_   string `json:"PlayerName"`
+	Message_      string `json:"Message"`
+	Type          int
 }
 
 func (p *BaseGameMessage) AddressTo(name string) {

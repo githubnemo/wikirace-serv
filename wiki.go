@@ -182,7 +182,7 @@ func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 				Key: "style",
 				Val: "color: gray;",
 			})
-			setAttributeValue(e.Nodes[0], "href", "#" + link)
+			setAttributeValue(e.Nodes[0], "href", "#"+link)
 			setAttributeValue(e.Nodes[0], "onClick", "javascript: alert('This link is not supported by wikiracer, thus it was disabled. If you feel this is an error, contact us. The original target was: "+link+"');")
 			return
 		}
@@ -260,7 +260,7 @@ func readSupportedWikis() (map[string]Wiki, error) {
 
 	// This looks broken and is really a workaround for go #3117
 	// which says that `wikis[url].URL = url` won't work.
-	for url, _ := range wikis {
+	for url := range wikis {
 		w := wikis[url]
 		w.URL = url
 		wikis[url] = w

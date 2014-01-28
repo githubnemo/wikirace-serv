@@ -32,7 +32,7 @@ func ErrMalformedQuery(e error) *stringUserFriendlyError {
 }
 
 func ErrGameMarshal(e error) *stringUserFriendlyError {
-	return &stringUserFriendlyError{e,"I could not save th1s game! M4ybe m_ disks a-re f-f-f---aulll-.."}
+	return &stringUserFriendlyError{e, "I could not save th1s game! M4ybe m_ disks a-re f-f-f---aulll-.."}
 }
 
 func ErrGetGameSession(e error) *stringUserFriendlyError {
@@ -53,7 +53,6 @@ func ErrNoSuchGame(gameId string) *stringUserFriendlyError {
 		fmt.Sprintf("There does not seem to be such a game as %s. Maybe your game expired or there's an error on our side.", gameId),
 	}
 }
-
 
 func logError(err interface{}, r *http.Request) {
 	log.Println(

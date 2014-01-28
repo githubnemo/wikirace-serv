@@ -33,5 +33,3 @@ func parseTemplates() (*MustTemplates, error) {
 
 	return &MustTemplates{tmp}, nil
 }
-
-

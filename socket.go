@@ -17,10 +17,10 @@ var (
 
 // Client connection consists of the websocket and the client ip
 type ClientConn struct {
-	websocket   *websocket.Conn
-	clientIP    string
-	inputChan   *chan GameMessage
-	playerName  string
+	websocket  *websocket.Conn
+	clientIP   string
+	inputChan  *chan GameMessage
+	playerName string
 }
 
 func init() {
@@ -35,7 +35,7 @@ type SocketHandler map[*Game]gameClients
 func (handler SocketHandler) Broadcast(game *Game, msg GameMessage) {
 	clients := handler[game]
 
-	for client, _ := range clients {
+	for client := range clients {
 		msg.AddressTo(client.playerName)
 		*client.inputChan <- msg
 	}
@@ -56,7 +56,7 @@ func (handler SocketHandler) NewConnection(game *Game, con ClientConn) {
 
 	if _, ok := ClientHandler[game]; !ok {
 		ClientHandler[game] = map[ClientConn]struct{}{
-			con: struct{}{},
+			con: {},
 		}
 	} else {
 		ClientHandler[game][con] = struct{}{}
