@@ -278,16 +278,12 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	wikiUrl := serviceVisitUrl(player.LastVisited())
 
-	err = templates.ExecuteTemplate(w, "game.html", struct {
+	templates.MustExecuteTemplate(w, "game.html", struct {
 		Game    *Game
 		Summary string
 		WikiURL string
 		Player  *Player
 	}{game, summary, wikiUrl, player})
-
-	if err != nil {
-		panic(err)
-	}
 }
 
 // Serves initial page
