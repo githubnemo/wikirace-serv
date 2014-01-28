@@ -45,6 +45,13 @@ func userFriendlyError(e error) string {
 	panic(e)
 }
 
+func logError(err interface{}, r *http.Request) {
+	log.Println(
+		"panic catched:", err,
+		"\nRequest data:", r,
+		"\nStack:", string(debug.Stack()))
+}
+
 func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
 		w.WriteHeader(401)
@@ -58,11 +65,6 @@ func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			fmt.Fprintf(w, "%s\n\n%s\n", err, debug.Stack())
 		}
-
-		log.Println(
-			"panic catched:", err,
-			"\nRequest data:", r,
-			"\nStack:", string(debug.Stack()))
 	}
 }
 
@@ -76,6 +78,8 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		return
 	}
+
+	logError(err, r)
 
 	if e, ok := err.(error); ok && e != nil {
 		understandableErrorMessage := userFriendlyError(e)
