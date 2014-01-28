@@ -38,6 +38,8 @@ $(document).ready(function() {
 
 	function setPlayerVisits(playerName, visits) {
 		findPlayerElement(playerName).find(".visits").text(visits);
+
+		sortNewPlayerVisits(playerName);
 	}
 
 	function pathLength(path) {
@@ -67,35 +69,46 @@ $(document).ready(function() {
 	//
 	// It is vital that the list of players IS ALREADY sorted.
 	function sortNewPlayerVisits(name) {
-		var unsorted = getPlayerListArray().toArray();
+		var playerArray = getPlayerListArray().toArray();
 
-		var nameIndex = indexOf(unsorted, function (e) {
+		var currentIndex = indexOf(playerArray, function (e) {
 			return e.name == name;
 		});
 
-		var beforeIndex = 0;
+		var newIndex = 0;
 
-		// Find first player with less visits than that of this player.
-		// (Insertion sort).
-		for (beforeIndex = 0; beforeIndex < unsorted.length; beforeIndex++) {
-			if (unsorted[beforeIndex].visits < unsorted[nameIndex].visits) {
+		// Find first player with less visits than that of this player
+		// that comes after the current index. This entry has to be swapped
+		// with the currentIndex.
+		for (newIndex = currentIndex; newIndex < playerArray.length; newIndex++) {
+			if (playerArray[newIndex].visits < playerArray[currentIndex].visits) {
 				break;
 			}
 		}
 
 		// Nothing to do, all sorted well.
-		if (beforeIndex - 1 == nameIndex) {
-			return
+		if (newIndex == playerArray.length) {
+			return;
 		}
 
 		// Move the element from where it was to the new position in a fancy way.
-		var $nameElem = unsorted[nameIndex].elem;
-		var $beforeElem = unsorted[beforeIndex].elem;
+		var $nameElem = playerArray[currentIndex].elem;
+		var $beforeElem = playerArray[newIndex].elem;
 
 		$nameElem.fadeOut(function () {
-			$nameElem.insertBefore($beforeElem);
-
+			$nameElem.insertAfter($beforeElem);
 			$nameElem.fadeIn();
+
+			// If player was the first, remove first indicator and give it
+			// to the new first.
+			if (currentIndex == 0) {
+				$nameElem.find(".badge").removeClass("badge-success");
+				$beforeElem.find(".badge").addClass("badge-success");
+			}
+
+			// Invoke another round of sorting as this might not be the only
+			// player that needs swapping.
+			sortNewPlayerVisits(name);
 		});
 	}
 
@@ -111,8 +124,6 @@ $(document).ready(function() {
 		}
 
 		setPlayerVisits(message["PlayerName"], pathLength(message["Player"]["Path"]));
-
-		sortNewPlayerVisits(message["PlayerName"]);
 	}
 
 	function joinHandler(message) {
