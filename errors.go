@@ -45,20 +45,6 @@ func userFriendlyError(e error) string {
 	panic(e)
 }
 
-// Wrap error handling chain around a http.HandlerFunc.
-//
-// First errors are tried to be resolved to meaningful user friendly
-// messages in userFriendlyErrorHandler. In case that fails,
-// a second error handler, the commonErrorHandler kicks in and reports some
-// basic crash report.
-//
-func errorHandler(f http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer userFriendlyErrorHandler(w, r)
-		f(w, r)
-	}
-}
-
 func commonErrorHandler(w http.ResponseWriter, r *http.Request) {
 	if err := recover(); err != nil {
 		w.WriteHeader(401)
@@ -102,5 +88,19 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// Re-panic as we haven't handled the error yet.
 		panic(err)
+	}
+}
+
+// Wrap error handling chain around a http.HandlerFunc.
+//
+// First errors are tried to be resolved to meaningful user friendly
+// messages in userFriendlyErrorHandler. In case that fails,
+// a second error handler, the commonErrorHandler kicks in and reports some
+// basic crash report.
+//
+func errorHandler(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer userFriendlyErrorHandler(w, r)
+		f(w, r)
 	}
 }
