@@ -45,6 +45,7 @@ func NewGame(hostingPlayerName string, wikiUrl string, saveHandler func(*Game)) 
 	game := &Game{
 		Host:    hostingPlayerName,
 		WikiUrl: wikiUrl,
+		saveHandler: saveHandler,
 	}
 
 	game.AddPlayer(hostingPlayerName)
