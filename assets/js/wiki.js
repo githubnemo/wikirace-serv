@@ -17,7 +17,7 @@ $(document).ready(function() {
 	}
 
 	function newPlayerElement(name) {
-		return $('<li data-player="'+name+'">'+name+' (<span class="visits"></span>)</li>');
+		return $('<li data-player="'+name+'">'+name+' <span class="badge visits"></span></li>');
 	}
 
 	function findPlayerElement(name) {
