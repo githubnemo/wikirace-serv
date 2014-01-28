@@ -87,7 +87,7 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 
 		logError(e, r)
 
-	} else if e == nil {
+	} else if ok && e == nil {
 		// There is an error but the programmer failed to supply
 		// a valid object. This is a programming error and cannot
 		// be handled gracefully.
