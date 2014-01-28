@@ -42,11 +42,23 @@ func mustParseQuery(q string) url.Values {
 	return values
 }
 
-func mustGetValidGameSession(r *http.Request) *GameSession {
+// Returned GameSession may be uninitialized.
+func mustGetGameSession(r *http.Request) *GameSession {
 	session, err := session.GetGameSession(r)
 
-	if err != nil || !session.IsInitialized() {
+	if err != nil {
 		panic(ErrGetGameSession(err))
+	}
+
+	return session
+}
+
+// Returned GameSession is initialized and ready to use.
+func mustGetValidGameSession(r *http.Request) *GameSession {
+	session := mustGetGameSession(r)
+
+	if !session.IsInitialized() {
+		panic(ErrGetGameSession(fmt.Errorf("Session is not initialized")))
 	}
 
 	return session
@@ -210,7 +222,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 // Serve game content
 func gameHandler(w http.ResponseWriter, r *http.Request) {
-	session := mustGetValidGameSession(r)
+	session := mustGetGameSession(r)
 	values := mustParseQuery(r.URL.RawQuery)
 	gameId := values.Get("id")
 
