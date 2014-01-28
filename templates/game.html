@@ -51,10 +51,21 @@
         {{format_wikiurl .Game.Goal}}<br /><br />
 
         <b>Players:</b><br />
-        <ol id="players">
-            {{range .Game.SortedPlayers}}
-            <li data-player="{{.Name}}">{{.Name}} <span class="badge visits">{{len .Path}}</span></li>
-            {{end}}
+		<ol id="players">
+			{{with $data := .}}{{range $index, $_ := .Game.SortedPlayers}}
+				{{if eq $data.Player.Name .Name}}
+				<li data-player="{{.Name}}">{{.Name}} (you)
+				{{else}}
+				<li data-player="{{.Name}}">{{.Name}}
+				{{end}}
+
+				{{if eq $index 0}}
+				<span class="badge badge-success visits">{{len .Path}}</span>
+				{{else}}
+				<span class="badge visits">{{len .Path}}</span>
+				{{end}}
+				</li>
+			{{end}}{{end}}
         </ol>
 
         <hr />
