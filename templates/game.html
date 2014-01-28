@@ -51,11 +51,11 @@
         {{format_wikiurl .Game.Goal}}<br /><br />
 
         <b>Players:</b><br />
-        <ul id="players">
+        <ol id="players">
             {{range .Game.SortedPlayers}}
-            <li data-player="{{.Name}}">{{.Name}} (<span class="visits">{{len .Path}}</span>)</li>
+            <li data-player="{{.Name}}">{{.Name}} <span class="badge visits">{{len .Path}}</span></li>
             {{end}}
-        </ul>
+        </ol>
 
         <hr />
         <b>Log</b>

@@ -5,3 +5,7 @@ body {
 iframe {
 	border: solid 1px black;
 }
+
+ol#players li {
+	list-style-type: decimal;
+}
