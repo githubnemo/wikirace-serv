@@ -109,6 +109,7 @@ func (g *Game) HasPlayer(name string) bool {
 }
 
 func (g *Game) SortedPlayers() []Player {
+	// FIXME race when Player (through GetPlayer()) is modified while sorting.
 	g.playerLock.Lock()
 	defer g.playerLock.Unlock()
 
@@ -132,7 +133,6 @@ func (g *Game) evaluateWinner(player *Player) (isWinner, isTempWinner bool) {
 	defer g.winnerLock.RUnlock()
 
 	isTempWinner = len(g.WinnerPath) == 0 || len(g.WinnerPath) > len(player.Path)
-
 	isWinner = true
 
 	// The player is NOT the full winner if there is a player with a shorter
