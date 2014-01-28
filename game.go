@@ -106,6 +106,9 @@ func (g *Game) HasPlayer(name string) bool {
 }
 
 func (g *Game) SortedPlayers() []Player {
+	g.playerLock.RLock()
+	defer g.playerLock.RUnlock()
+
 	sort.Sort(SortablePlayers(g.Players))
 
 	return g.Players
