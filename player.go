@@ -24,7 +24,7 @@ func PlayerFromSession(session *GameSession) (*Player, error) {
 	p := game.GetPlayer(session.PlayerName())
 
 	if p == nil {
-		return nil, fmt.Errorf("Player %s is not in the game %s.", session.PlayerName(), game.Hash)
+		return nil, fmt.Errorf("Player %s is not in the game %s.", session.PlayerName(), game.Hash())
 	}
 
 	p.Session = session

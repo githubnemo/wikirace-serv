@@ -268,14 +268,13 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		summary = err.Error()
-
 		log.Printf("Error fetching summary for game %#v: %s\n", game, err)
 	}
 
 	player, err := PlayerFromSession(session)
 
 	if err != nil {
-		panic(err)
+		panic(ErrPlayerLoad(err))
 	}
 
 	wikiUrl := serviceVisitUrl(player.LastVisited())

@@ -7,43 +7,53 @@ import (
 	"runtime/debug"
 )
 
-type ErrStartAndGoal error
-
-type ErrMalformedQuery error
-
-type ErrGameMarshal error
-
-type ErrGetGameSession error
-
-type ErrGetGame error
-
-type ErrNoSuchGame string
-
-func (e ErrNoSuchGame) Error() string {
-	return "Game " + string(e) + " could not be found in game store."
+type UserFriendlyError interface {
+	error
+	UserFriendlyError() string
 }
 
-// Translate error object to user friendly message if possible.
-func userFriendlyError(e error) string {
-	switch e.(type) {
-	case ErrStartAndGoal:
-		return "I could not find where the wiki is in the intertubes."
-	case ErrMalformedQuery:
-		return "The stuff you typed in the URI I don't understand."
-	case ErrGameMarshal:
-		return "I could not save th1s game! M4ybe m_ disks a-re f-f-f---aulll-.."
-	case ErrGetGameSession:
-		return "Tried to get your game session but failed. Maybe you threw away your cookies? Who would do that to his cookies?!"
-	case ErrNoSuchGame:
-		return "Pretty much what it says, there does not seem to be such a game. Maybe your game expired or there's an error on our side."
-	case ErrGetGame:
-		return "I failed to retrieve this game, maybe there's something wrong?"
+var _ UserFriendlyError = (*stringUserFriendlyError)(nil)
+
+type stringUserFriendlyError struct {
+	error
+	uerr string
+}
+
+func (s *stringUserFriendlyError) UserFriendlyError() string {
+	return s.uerr
+}
+
+func ErrStartAndGoal(e error) *stringUserFriendlyError {
+	return &stringUserFriendlyError{e, "I could not find where the wiki is in the intertubes."}
+}
+
+func ErrMalformedQuery(e error) *stringUserFriendlyError {
+	return &stringUserFriendlyError{e, "The stuff you typed in the URI I don't understand."}
+}
+
+func ErrGameMarshal(e error) *stringUserFriendlyError {
+	return &stringUserFriendlyError{e,"I could not save th1s game! M4ybe m_ disks a-re f-f-f---aulll-.."}
+}
+
+func ErrGetGameSession(e error) *stringUserFriendlyError {
+	return &stringUserFriendlyError{e, "Tried to get your game session but failed. Maybe you threw away your cookies? Who would do that to his cookies?!"}
+}
+
+func ErrGetGame(e error) *stringUserFriendlyError {
+	return &stringUserFriendlyError{e, "I failed to retrieve this game, maybe there's something wrong?"}
+}
+
+func ErrPlayerLoad(e error) *stringUserFriendlyError {
+	return &stringUserFriendlyError{e, "Loading your player profile for the game failed."}
+}
+
+func ErrNoSuchGame(gameId string) *stringUserFriendlyError {
+	return &stringUserFriendlyError{
+		fmt.Errorf("Requested invalid game %s", gameId),
+		fmt.Sprintf("There does not seem to be such a game as %s. Maybe your game expired or there's an error on our side.", gameId),
 	}
-
-	// We don't know this error. Panic to let the commonErrorHandler handle
-	// this unknown error.
-	panic(e)
 }
+
 
 func logError(err interface{}, r *http.Request) {
 	log.Println(
@@ -75,17 +85,15 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := recover()
 
-	if e, ok := err.(error); ok && e != nil {
+	if e, ok := err.(UserFriendlyError); ok && e != nil {
 		// We have recovered an error expected by the programmer,
 		// handle it gracefully.
-		understandableErrorMessage := userFriendlyError(e)
+		logError(e, r)
 
 		templates.ExecuteTemplate(w, "error.html", struct {
 			ErrorMessage               string
 			UnderstandableErrorMessage string
-		}{e.Error(), understandableErrorMessage})
-
-		logError(e, r)
+		}{e.Error(), e.UserFriendlyError()})
 
 	} else if ok && e == nil {
 		// There is an error but the programmer failed to supply
