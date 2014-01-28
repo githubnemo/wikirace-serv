@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,7 +17,7 @@ import (
 var (
 	session    *GameSessionStore
 	gameStore  *GameStore
-	templates  *template.Template
+	templates  *MustTemplates
 	pageCipher *PageCipher
 )
 
@@ -297,7 +296,9 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func reloadHandler(w http.ResponseWriter, r *http.Request) {
-	err := parseTemplates()
+	var err error
+
+	templates, err = parseTemplates()
 
 	if err != nil {
 		panic(err)
@@ -351,11 +352,13 @@ func setupPageCipher() (*PageCipher, error) {
 // server registers player bar in game
 
 func main() {
+	var err error
+
 	session = NewGameSessionStore()
 
-	err := parseTemplates()
+	templates, err = parseTemplates()
 
-	if err != nil {
+	if err != nil || templates == nil {
 		log.Fatal("Unable to parse templates: ", err)
 	}
 
