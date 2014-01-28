@@ -210,7 +210,7 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	session := mustGetValidGameSession(r)
+	session := mustGetGameSession(r)
 
 	session.Init(playerName, gameId)
 	session.Save(r, w)
