@@ -75,13 +75,9 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := recover()
 
-	if err == nil {
-		return
-	}
-
-	logError(err, r)
-
 	if e, ok := err.(error); ok && e != nil {
+		// We have recovered an error expected by the programmer,
+		// handle it gracefully.
 		understandableErrorMessage := userFriendlyError(e)
 
 		templates.ExecuteTemplate(w, "error.html", struct {
@@ -89,8 +85,21 @@ func userFriendlyErrorHandler(w http.ResponseWriter, r *http.Request) {
 			UnderstandableErrorMessage string
 		}{e.Error(), understandableErrorMessage})
 
-	} else {
-		// Re-panic as we haven't handled the error yet.
+		logError(e, r)
+
+	} else if e == nil {
+		// There is an error but the programmer failed to supply
+		// a valid object. This is a programming error and cannot
+		// be handled gracefully.
+		logError(err, r)
+
+		panic("Invalid error")
+
+	} else if err != nil {
+		// What we have recovered is no error but non-nil, this is
+		// unexpected and can't be handled most user friendly.
+		logError(err, r)
+
 		panic(err)
 	}
 }
