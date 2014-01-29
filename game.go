@@ -132,13 +132,17 @@ func (g *Game) evaluateWinner(player *Player) (isWinner, isTempWinner bool) {
 	g.winnerLock.RLock()
 	defer g.winnerLock.RUnlock()
 
-	isTempWinner = len(g.WinnerPath) == 0 || len(g.WinnerPath) > len(player.Path)
-	isWinner = true
+	if player.Path[len(player.Path)-1] != g.Goal {
+		return false, false
+	}
 
-	// The player is NOT the full winner if there is a player with a shorter
-	// path.
+	isTempWinner = g.Winner == player.Name || len(g.WinnerPath) == 0 || len(g.WinnerPath) > len(player.Path)
+	isWinner = isTempWinner
+
+	// The player is NOT the full winner if there is an active player with
+	// a shorter path.
 	for _, p := range g.Players {
-		if len(p.Path) < len(player.Path) && !player.LeftGame {
+		if p.Name != player.Name && len(p.Path) < len(player.Path) && !p.LeftGame {
 			isWinner = false
 			break
 		}
