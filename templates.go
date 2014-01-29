@@ -23,6 +23,14 @@ func parseTemplates() (*MustTemplates, error) {
 		"format_wikiurl": func(in string) string {
 			return strings.Replace(in, "_", " ", -1)
 		},
+		"is_winner": func(g *Game, p Player) bool {
+			isWinner, _ := g.EvaluateWinner(&p)
+			return isWinner
+		},
+		"is_temporary_winner": func(g *Game, p Player) bool {
+			_, isTemp := g.EvaluateWinner(&p)
+			return isTemp
+		},
 	})
 
 	tmp, err := tmp.ParseGlob("templates/*.html")

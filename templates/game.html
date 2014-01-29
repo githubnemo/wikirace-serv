@@ -52,11 +52,19 @@
 
         <b>Players:</b><br />
 		<ol id="players">
-			{{with $data := .}}{{range $index, $_ := .Game.SortedPlayers}}
+			{{with $data := .}}{{range $index, $player := .Game.SortedPlayers}}
 				{{if eq $data.Player.Name .Name}}
 				<li data-player="{{.Name}}">{{.Name}} (you)
 				{{else}}
 				<li data-player="{{.Name}}">{{.Name}}
+				{{end}}
+
+				{{with $isTempWinner := is_temporary_winner $data.Game $player}}
+					{{with $isWinner := is_winner $data.Game $player}}
+						<span title="Winner!" class="winflag badge badge-important">⚑</span>
+					{{else}}
+						<span title="Winner for now! Go for it!" class="winflag badge badge-warning">⚑</span>
+					{{end}}
 				{{end}}
 
 				{{if eq $index 0}}

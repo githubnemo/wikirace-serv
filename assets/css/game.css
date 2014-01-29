@@ -19,4 +19,8 @@ ol#players li .visits {
 	position: absolute;
 	right: 0;
 }
+
+ol#players li .winflag {
+	position: absolute;
+	right: 4em;
 }

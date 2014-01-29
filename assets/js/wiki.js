@@ -151,7 +151,7 @@ $(document).ready(function() {
 		$("#dialog").text(message["PlayerName"] + " WINS").dialog({
 			title: "visit"
 		});
-		logMessage(message["PlayerName"] + ' won the game.');
+		logMessage(message["PlayerName"] + ' won the game for now.');
 	}
 
 	function gameOverHandler(message) {
