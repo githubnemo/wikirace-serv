@@ -34,15 +34,6 @@ type AddressedGameMessage struct {
 	RecipientName string
 }
 
-// Workaround for http://code.google.com/p/go/issues/detail?id=7230
-func (a *AddressedGameMessage) MarshalJSON() (res []byte, err error) {
-	rcp, err := json.Marshal(struct{RecipientName string}{a.RecipientName})
-	msg, err := json.Marshal(a.GameMessage)
-
-	res = append(append(msg[:len(msg)-1], ','), rcp[1:]...)
-	return
-}
-
 type SocketHandler map[*Game]gameClients
 
 // TODO: error returned?

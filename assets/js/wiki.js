@@ -170,6 +170,11 @@ $(document).ready(function() {
 	};
 
 	function handleMessage(message) {
+		// Workaround for http://code.google.com/p/go/issues/detail?id=7230
+		for (var k in message["GameMessage"]) {
+			message[k] = message["GameMessage"][k];
+		}
+
 		messageHandler[message.Type](message)
 	}
 
