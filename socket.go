@@ -29,6 +29,20 @@ func init() {
 
 type gameClients map[ClientConn]struct{}
 
+type AddressedGameMessage struct {
+	GameMessage
+	RecipientName string
+}
+
+// Workaround for http://code.google.com/p/go/issues/detail?id=7230
+func (a *AddressedGameMessage) MarshalJSON() (res []byte, err error) {
+	rcp, err := json.Marshal(struct{RecipientName string}{a.RecipientName})
+	msg, err := json.Marshal(a.GameMessage)
+
+	res = append(append(msg[:len(msg)-1], ','), rcp[1:]...)
+	return
+}
+
 type SocketHandler map[*Game]gameClients
 
 // TODO: error returned?
@@ -36,8 +50,7 @@ func (handler SocketHandler) Broadcast(game *Game, msg GameMessage) {
 	clients := handler[game]
 
 	for client := range clients {
-		msg.AddressTo(client.playerName)
-		*client.inputChan <- msg
+		*client.inputChan <- AddressedGameMessage{msg, client.playerName}
 	}
 }
 

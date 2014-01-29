@@ -10,9 +10,6 @@ const (
 )
 
 type GameMessage interface {
-	// Set the recipient name for the message
-	AddressTo(string)
-
 	// Return the name of the concerned player
 	PlayerName() string
 
@@ -20,14 +17,9 @@ type GameMessage interface {
 }
 
 type BaseGameMessage struct {
-	RecipientName string
 	PlayerName_   string `json:"PlayerName"`
 	Message_      string `json:"Message"`
 	Type          int
-}
-
-func (p *BaseGameMessage) AddressTo(name string) {
-	p.RecipientName = name
 }
 
 func (p *BaseGameMessage) PlayerName() string {
@@ -66,7 +58,7 @@ type FatalStuffMessage struct {
 }
 
 func createMessage(typeNum int, playername, message string) *BaseGameMessage {
-	return &BaseGameMessage{"", playername, message, typeNum}
+	return &BaseGameMessage{playername, message, typeNum}
 }
 
 func NewJoinMessage(player *Player) JoinMessage {
