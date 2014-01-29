@@ -102,8 +102,8 @@ $(document).ready(function() {
 			// If player was the first, remove first indicator and give it
 			// to the new first.
 			if (currentIndex == 0) {
-				$nameElem.find(".badge").removeClass("badge-success");
-				$beforeElem.find(".badge").addClass("badge-success");
+				$nameElem.find(".visits.badge").removeClass("badge-success");
+				$beforeElem.find(".visits.badge").addClass("badge-success");
 			}
 
 			// Invoke another round of sorting as this might not be the only
