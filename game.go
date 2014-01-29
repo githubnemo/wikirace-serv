@@ -125,6 +125,8 @@ func (g *Game) setWinner(player *Player) {
 	g.Winner = player.Name
 	g.WinnerPath = player.Path
 
+	player.LeftGame = true
+
 	g.save()
 }
 

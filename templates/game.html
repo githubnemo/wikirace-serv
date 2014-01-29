@@ -65,6 +65,10 @@
 					{{else}}
 						<span title="Winner for now! Go for it!" class="winflag badge badge-warning">⚑</span>
 					{{end}}
+				{{else}}
+					{{if $player.LeftGame}}
+						<span title="Left game." class="winflag badge">❌</span>
+					{{end}}
 				{{end}}
 
 				{{if eq $index 0}}
