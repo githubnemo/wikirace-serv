@@ -6,12 +6,17 @@ iframe {
 	border: solid 1px black;
 }
 
+ol#players {
+	position: relative;
+}
+
 ol#players li {
 	list-style-type: decimal;
 	margin-left: -5px;
 }
 
 ol#players li .visits {
-	float: right;
-	margin-right: 13px;
+	position: absolute;
+	right: 0;
+}
 }
