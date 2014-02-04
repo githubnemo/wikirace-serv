@@ -147,6 +147,8 @@ $(document).ready(function() {
 		logMessage(message["PlayerName"] + ' has left the game.');
 	}
 
+	// Someone reached the finish line, therefore he is a temporary
+	// winner but not the winner of the game.
 	function finishHandler(message) {
 		$("#dialog").text(message["PlayerName"] + " WINS").dialog({
 			title: "visit"
@@ -154,6 +156,8 @@ $(document).ready(function() {
 		logMessage(message["PlayerName"] + ' won the game for now.');
 	}
 
+	// Someone reached the goal and nobody can beat him anymore.
+	// He is the actual winner of the game.
 	function gameOverHandler(message) {
 	}
 

@@ -63,7 +63,9 @@ func mustGetValidGameSession(r *http.Request) *GameSession {
 	return session
 }
 
-// Accepts visits and serves new wiki page
+// Accepts visits and serves new wiki page.
+//
+// Parameters: page
 func visitHandler(w http.ResponseWriter, r *http.Request) {
 	values := mustParseQuery(r.URL.RawQuery)
 
