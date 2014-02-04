@@ -147,15 +147,35 @@ $(document).ready(function() {
 		logMessage(message["PlayerName"] + ' has left the game.');
 	}
 
+	function showWinModal(modalSelector, isWinner, playerName) {
+		var dialog = $(modalSelector);
+
+		dialog.find("#player").text(playerName);
+		dialog.find("#numSteps").text(getPlayerVisits(playerName));
+
+		dialog.find("#isWinner").show();
+		dialog.find("#isOther").show();
+
+		console.log("ISWINNER", isWinner);
+
+		if (isWinner) {
+			// The winner gets only the 'winner' message, the 'other' message is hidden.
+			dialog.find("#isOther").hide();
+		} else {
+			dialog.find("#isWinner").hide();
+		}
+
+		dialog.modal();
+	}
+
 	// Someone reached the finish line, therefore he is a temporary
 	// winner but not the winner of the game.
 	function finishHandler(message) {
-		var dialog = $("#temporaryWinModal");
-
-		dialog.find("#player").text(message["PlayerName"]);
-		dialog.find("#numSteps").text(getPlayerVisits(message["PlayerName"]));
-
-		dialog.modal();
+		showWinModal(
+			"#temporaryWinModal",
+			message["RecipientName"] == message["PlayerName"],
+			message["PlayerName"]
+		);
 
 		logMessage(message["PlayerName"] + ' won the game for now.');
 	}
@@ -163,6 +183,13 @@ $(document).ready(function() {
 	// Someone reached the goal and nobody can beat him anymore.
 	// He is the actual winner of the game.
 	function gameOverHandler(message) {
+		showWinModal(
+			"#actualWinModal",
+			message["RecipientName"] == message["PlayerName"],
+			message["PlayerName"]
+		);
+
+		logMessage(message["PlayerName"] + ' won the game!');
 	}
 
 	function fatalStuffHandler(message) {

@@ -37,12 +37,43 @@
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 		<h4 class="modal-title" id="temporaryWinLabel"><span id="player">Nelix</span> reached the goal!</h4>
       </div>
-      <div class="modal-body">
-		  It's not too late yet, you can still win if you reach the goal in
-		  less steps than <span id="numSteps">2.1718</span>!
+	  <div class="modal-body">
+		  <span id="isWinner">
+			  Now you just have to wait until the others are finished and
+			  hope that nobody finds a shorter path than you did!
+		  </span>
+		  <span id="isOther">It's not too late yet, you can still win if you reach the goal in
+			  less steps than <span id="numSteps">2.1718</span>!
+		  </span>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">I try</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- actual win modal -->
+<div class="modal fade" id="actualWinModal" tabindex="-1" role="dialog" aria-labelledby="actualWinLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		<h4 class="modal-title" id="actualWinLabel"><span id="player">Nelix</span> won the internet!</h4>
+      </div>
+      <div class="modal-body">
+		  <span id="isWinner">
+			  You did it! You've completed the run in
+			  <span id="numSteps">2.1718</span> steps and won the game!
+		  </span>
+		  <span id="isOther">
+			  <span id="player"></span> reached the goal in
+			  <span id="numSteps">2.1718</span> steps and nobody can beat that
+			  anymore. The game is over!
+		  </span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
