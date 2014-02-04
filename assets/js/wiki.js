@@ -229,9 +229,13 @@ $(document).ready(function() {
 
 	sock.onerror = function(m) {
 		console.log("Error occured sending..." + m.data);
+
+		// TODO: disable game interaction, the connection must exist.
 	}
 
 	sock.onclose = function(m) {
 		console.log("Disconnected - status " + this.readyState);
+
+		// TODO: disable game interaction, the connection must exist.
 	}
 });
