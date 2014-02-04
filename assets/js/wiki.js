@@ -150,9 +150,13 @@ $(document).ready(function() {
 	// Someone reached the finish line, therefore he is a temporary
 	// winner but not the winner of the game.
 	function finishHandler(message) {
-		$("#dialog").text(message["PlayerName"] + " WINS").dialog({
-			title: "visit"
-		});
+		var dialog = $("#temporaryWinModal");
+
+		dialog.find("#player").text(message["PlayerName"]);
+		dialog.find("#numSteps").text(getPlayerVisits(message["PlayerName"]));
+
+		dialog.modal();
+
 		logMessage(message["PlayerName"] + ' won the game for now.');
 	}
 
