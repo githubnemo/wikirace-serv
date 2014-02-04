@@ -83,6 +83,20 @@
   <h1>wikiracer! <small>by nemo and krizz</small></h1>
 </div>
 
+{{/* JavaScrit HTML templates  */}}
+<div id="templates" style="display: none;">
+	{{define "winner_badge"}}
+		<span title="Winner!" class="winflag winner badge badge-important">⚑</span>
+	{{end}}
+
+	{{define "temporary_winner_badge"}}
+		<span title="Winner for now! Go for it!" class="winflag temporary-winner badge badge-warning">⚑</span>
+	{{end}}
+
+	{{template "temporary_winner_badge"}}
+	{{template "winner_badge"}}
+</div>
+
 <div class="row-fluid">
     <div class="span9">
         <h4 id="pageTitle">{{format_wikiurl .Player.LastVisited}}</h4>
@@ -98,7 +112,7 @@
         <b>Start:</b><br />
         {{format_wikiurl .Game.Start}}<br /><br />
         <b>Goal:</b><br />
-        {{format_wikiurl .Game.Goal}}<br /><br />
+		{{format_wikiurl .Game.Goal}}<br /><br />
 
         <b>Players:</b><br />
 		<ol id="players">
@@ -111,9 +125,9 @@
 
 				{{with $isTempWinner := is_temporary_winner $data.Game $player}}
 					{{with $isWinner := is_winner $data.Game $player}}
-						<span title="Winner!" class="winflag badge badge-important">⚑</span>
+						{{template "winner_badge"}}
 					{{else}}
-						<span title="Winner for now! Go for it!" class="winflag badge badge-warning">⚑</span>
+						{{template "temporary_winner_badge"}}
 					{{end}}
 				{{else}}
 					{{if $player.LeftGame}}
