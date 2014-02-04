@@ -111,7 +111,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 			game.Broadcast(GameMessage(NewFinishMessage(session)))
 		}
 
-		templates.ExecuteTemplate(w, "win.html", struct {
+		templates.MustExecuteTemplate(w, "win.html", struct {
 			Game            *Game
 			Player          *Player
 			IsWinner        bool
