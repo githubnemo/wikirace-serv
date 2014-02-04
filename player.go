@@ -34,11 +34,14 @@ func PlayerFromSession(session *GameSession) (*Player, error) {
 }
 
 func (p *Player) Visited(page string) {
-	// TODO: Do not account visit when reloading the page.
+	// Do not account visit when reloading the page.
 	// We have no real reason to count this as a re-visit and in case
 	// of a JS error or some incompatibility in the browser this will
 	// only frustrate.
-	// if !p.Path[len(p.Path)-1] == page { append }
+	if len(p.Path) > 0 && p.Path[len(p.Path)-1] == page {
+		return
+	}
+
 	p.Path = append(p.Path, page)
 }
 
