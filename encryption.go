@@ -37,25 +37,25 @@ func (p PageCipher) EncryptPage(page string) string {
 	return fmt.Sprintf("%d:%s", padding, base64.URLEncoding.EncodeToString(dst))
 }
 
-func (p PageCipher) DecryptPage(input string) string {
+func (p PageCipher) DecryptPage(input string) (string, error) {
 	var padding int
 	var b64page string
 
 	_, err := fmt.Sscanf(input, "%d:%s", &padding, &b64page)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	dst, err := base64.URLEncoding.DecodeString(b64page)
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	p.Decrypt(dst, dst)
 
-	return string(dst[:len(dst)-padding])
+	return string(dst[:len(dst)-padding]), nil
 }
 
 func NewPageCipher(key []byte) (*PageCipher, error) {

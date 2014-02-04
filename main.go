@@ -71,8 +71,13 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	page := values.Get("page")
 
-	page = pageCipher.DecryptPage(page)
-	page, err := url.QueryUnescape(page)
+	page, err := pageCipher.DecryptPage(page)
+
+	if err != nil {
+		panic(err)
+	}
+
+	page, err = url.QueryUnescape(page)
 
 	if err != nil {
 		panic(err)
