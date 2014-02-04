@@ -134,15 +134,24 @@ func (g *Game) evaluateWinner(player *Player) (isWinner, isTempWinner bool) {
 	g.winnerLock.RLock()
 	defer g.winnerLock.RUnlock()
 
-	if player.Path[len(player.Path)-1] != g.Goal {
+	// The player is not anywhere near the goal, he can't be winner.
+	if len(player.Path) == 0 || player.Path[len(player.Path)-1] != g.Goal {
 		return false, false
 	}
 
+	// The player is the temporary winner when the goal has been reached
+	// (checked before) and
+	//
+	// - the player is the winner
+	// - or there is no winner yet
+	// - or the player has a lower path than the current winner
 	isTempWinner = g.Winner == player.Name || len(g.WinnerPath) == 0 || len(g.WinnerPath) > len(player.Path)
+
+	// The player is the actual winner if he is a temporary winner and
+	// there is no active player with a shorter path playing anymore
+	// that can perform better than this player.
 	isWinner = isTempWinner
 
-	// The player is NOT the full winner if there is an active player with
-	// a shorter path.
 	for _, p := range g.Players {
 		if p.Name != player.Name && len(p.Path) < len(player.Path) && !p.LeftGame {
 			isWinner = false
