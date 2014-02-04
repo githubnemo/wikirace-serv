@@ -177,6 +177,8 @@ $(document).ready(function() {
 			message["PlayerName"]
 		);
 
+		// TODO: add badge to winning player
+
 		logMessage(message["PlayerName"] + ' won the game for now.');
 	}
 
@@ -188,6 +190,8 @@ $(document).ready(function() {
 			message["RecipientName"] == message["PlayerName"],
 			message["PlayerName"]
 		);
+
+		// TODO: add badge to winning player
 
 		logMessage(message["PlayerName"] + ' won the game!');
 	}
