@@ -10,6 +10,7 @@ type MustTemplates struct {
 	*template.Template
 }
 
+// TODO: replace with template.Must
 func (t *MustTemplates) MustExecuteTemplate(wr io.Writer, name string, data interface{}) {
 	err := t.Template.ExecuteTemplate(wr, name, data)
 
