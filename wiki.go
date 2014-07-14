@@ -19,12 +19,6 @@ type Wiki struct {
 
 var wikis map[string]Wiki
 
-// Result type to pass over chan for concurrentHead()
-type headResult struct {
-	res *http.Response
-	err error
-}
-
 func init() {
 	// TODO: Make this somehow better perhaps? Less timeout? Think about this.
 	t := http.DefaultTransport.(*http.Transport)
@@ -57,17 +51,7 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 	return nil
 }
 
-func concurrentHead(url string) chan *headResult {
-	c := make(chan *headResult)
 
-	go func() {
-		res, err := http.Head(url)
-
-		c <- &headResult{res, err}
-	}()
-
-	return c
-}
 
 func buildWikiPageLink(url, page string) string {
 	return url + "/wiki/" + page
@@ -92,6 +76,25 @@ func ServeWikiPage(url, page string, w http.ResponseWriter) {
 	w.Write([]byte(content))
 }
 
+
+// Result type to pass over chan for concurrentHead()
+type pageLookupResponse struct {
+	pageTitle string
+	res       *http.Response
+	err       error
+}
+
+// Resolve the page title from a wiki-page-url.
+func fetchWikiPageTitle(url string) (string, error) {
+	doc, err := goquery.NewDocument(url)
+
+	if err != nil {
+		return "", err
+	}
+
+	return doc.Find("#firstHeading").Text(), nil
+}
+
 // Fetch two random pages from wikipedia and get the corresponding
 // page titles which will then represent the start and the goal of the game.
 func DetermineStartAndGoal(url string) (string, string, error) {
@@ -99,24 +102,32 @@ func DetermineStartAndGoal(url string) (string, string, error) {
 
 	wpRandomUrl := buildWikiPageLink(wiki.URL, wiki.RandomPage)
 
-	c1 := concurrentHead(wpRandomUrl)
-	c2 := concurrentHead(wpRandomUrl)
+	type result struct{ title string; err error }
 
-	sres := <-c1
+	c := make(chan result)
+
+	go func() {
+		title, err := fetchWikiPageTitle(wpRandomUrl)
+		c <- result{title, err}
+	}()
+
+	go func() {
+		title, err := fetchWikiPageTitle(wpRandomUrl)
+		c <- result{title, err}
+	}()
+
+	sres := <-c
+	gres := <-c
 
 	if sres.err != nil {
 		return "", "", sres.err
 	}
 
-	gres := <-c2
-
 	if gres.err != nil {
 		return "", "", gres.err
 	}
 
-	return trimPageName(sres.res.Request.URL.Path),
-		trimPageName(gres.res.Request.URL.Path),
-		nil
+	return sres.title, gres.title, nil
 }
 
 // Copied from goquery.Selection.Html().
