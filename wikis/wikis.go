@@ -1,4 +1,4 @@
-package main
+package wikis
 
 import (
 	"bytes"
@@ -14,25 +14,17 @@ import (
 	"time"
 )
 
-type Wiki struct {
-	Name, URL, RandomPage, BodySelector string
-}
-
 var wikis map[string]Wiki
+
+var Config struct {
+	PageRenderer func(header, body template.HTML) (string, error)
+}
 
 func init() {
 	// TODO: Make this somehow better perhaps? Less timeout? Think about this.
 	t := http.DefaultTransport.(*http.Transport)
 
 	t.ResponseHeaderTimeout = 10 * time.Second
-
-	var err error
-
-	wikis, err = readSupportedWikis()
-
-	if err != nil {
-		panic(err)
-	}
 }
 
 func setAttributeValue(n *html.Node, attrName, value string) error {
@@ -52,12 +44,19 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 	return nil
 }
 
-func buildWikiPageLink(url, page string) string {
-	return url + "/wiki/" + page
+
+
+type Wiki struct {
+	Name, URL, RandomPage, BodySelector string
 }
 
-func ServeWikiPage(url, page string, w http.ResponseWriter) {
-	doc, err := goquery.NewDocument(buildWikiPageLink(url, page))
+// Generate a full HTTP link to the given page on this wiki.
+func (wiki *Wiki) PageLink(page string) string {
+	return wiki.URL + "/wiki/" + page
+}
+
+func (wiki *Wiki) ServeWikiPage(page string, t TranslatorFunc, w http.ResponseWriter) {
+	doc, err := goquery.NewDocument(wiki.PageLink(page))
 	addCSSOverride(doc)
 
 	if err != nil {
@@ -65,9 +64,9 @@ func ServeWikiPage(url, page string, w http.ResponseWriter) {
 	}
 
 	// Links are not clickable as they don't link to a page.
-	removeLinksFromImages(doc, url)
+	wiki.removeLinksFromImages(doc)
 
-	content, err := rewriteWikiUrls(doc, url)
+	content, err := wiki.rewriteWikiURLs(doc, t)
 
 	if err != nil {
 		panic(err)
@@ -76,16 +75,8 @@ func ServeWikiPage(url, page string, w http.ResponseWriter) {
 	w.Write([]byte(content))
 }
 
-
-// Result type to pass over chan for concurrentHead()
-type pageLookupResponse struct {
-	pageTitle string
-	res       *http.Response
-	err       error
-}
-
 // Resolve the page title from a wiki-page-url.
-func fetchWikiPageTitle(url string) (string, error) {
+func (w *Wiki) PageTitle(url string) (string, error) {
 	doc, err := goquery.NewDocument(url)
 
 	if err != nil {
@@ -95,24 +86,22 @@ func fetchWikiPageTitle(url string) (string, error) {
 	return doc.Find("#firstHeading").Text(), nil
 }
 
-// Fetch two random pages from wikipedia and get the corresponding
-// page titles which will then represent the start and the goal of the game.
-func DetermineStartAndGoal(url string) (string, string, error) {
-	wiki := getWikiInformationByUrl(url)
-
-	wpRandomUrl := buildWikiPageLink(wiki.URL, wiki.RandomPage)
+// Fetch two random pages from the wiki and get the corresponding page titles
+// which will then represent the start and the goal of the game.
+func (wiki *Wiki) DetermineStartAndGoal() (string, string, error) {
+	wpRandomUrl := wiki.PageLink(wiki.RandomPage)
 
 	type result struct{ title string; err error }
 
 	c := make(chan result)
 
 	go func() {
-		title, err := fetchWikiPageTitle(wpRandomUrl)
+		title, err := wiki.PageTitle(wpRandomUrl)
 		c <- result{title, err}
 	}()
 
 	go func() {
-		title, err := fetchWikiPageTitle(wpRandomUrl)
+		title, err := wiki.PageTitle(wpRandomUrl)
 		c <- result{title, err}
 	}()
 
@@ -128,6 +117,46 @@ func DetermineStartAndGoal(url string) (string, string, error) {
 	}
 
 	return sres.title, gres.title, nil
+}
+
+func (wiki *Wiki) FirstParagraph(pageTitle string) (string, error) {
+	doc, err := goquery.NewDocument(wiki.PageLink(pageTitle))
+
+	if err != nil {
+		return "", err
+	}
+
+	selections := doc.Find("#mw-content-text > p")
+
+	if selections.Length() == 0 {
+		return "", fmt.Errorf("No selections found.")
+	}
+
+	return selections.First().Text(), nil
+}
+
+// Some links, such as ones prefixed with "Category:" may not be supported
+// by wikiracer.
+func (w *Wiki) isUnsupportedLink(link string) bool {
+	return !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":")
+}
+
+// Most of the links on wiki pages link to the image source. So we just
+// remove those links.
+func (wiki *Wiki) removeLinksFromImages(doc *goquery.Document) {
+	bodySelector := wiki.BodySelector
+
+	imageRemover := func(i int, e *goquery.Selection) {
+		imageNode := e.Nodes[0]
+		anchorNode := imageNode.Parent
+		anchorParent := anchorNode.Parent
+
+		anchorParent.RemoveChild(anchorNode)
+		anchorNode.RemoveChild(imageNode)
+		anchorParent.AppendChild(imageNode)
+	}
+
+	doc.Find(bodySelector + " a > img").Each(imageRemover)
 }
 
 // Copied from goquery.Selection.Html().
@@ -152,30 +181,10 @@ func htmlContent(sel *goquery.Selection) (ret string, e error) {
 	return
 }
 
-func removeLinksFromImages(doc *goquery.Document, wikiUrl string) {
-	bodySelector := getWikiInformationByUrl(wikiUrl).BodySelector
-
-	imageRemover := func(i int, e *goquery.Selection) {
-		imageNode := e.Nodes[0]
-		anchorNode := imageNode.Parent
-		anchorParent := anchorNode.Parent
-
-		anchorParent.RemoveChild(anchorNode)
-		anchorNode.RemoveChild(imageNode)
-		anchorParent.AppendChild(imageNode)
-	}
-
-	doc.Find(bodySelector + " a > img").Each(imageRemover)
-}
-
-func isUnsupportedLink(link string) bool {
-	return !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":")
-}
-
 func addCSSOverride(doc *goquery.Document) {
 	s := "<link rel='stylesheet' type='text/css' href='css/wiki_overrides.css'>"
 
-	// see: http://stackoverflow.com/questions/15081119/any-way-to-use-html-parse-without-it-adding-nodes-to-make-a-well-formed-tree
+	// see: http://stackoverflow.com/questions/15081119
 	newCssNode, err := html.ParseFragment(strings.NewReader(s), &html.Node{
 		Type:     html.ElementNode,
 		Data:     "body",
@@ -190,7 +199,11 @@ func addCSSOverride(doc *goquery.Document) {
 	originalNode.AppendChild(newCssNode[0])
 }
 
-func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
+// A translator function translates the wiki page title to the internal link
+// that is used to identify the page.
+type TranslatorFunc func(page string) string
+
+func (wiki *Wiki) rewriteWikiURLs(doc *goquery.Document, t TranslatorFunc) (string, error) {
 	hrefRewriter := func(i int, e *goquery.Selection) {
 		link, ok := e.Attr("href")
 
@@ -206,7 +219,7 @@ func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 
 		// Disable unsupported links so that the user does not accidently
 		// clicks on these.
-		if isUnsupportedLink(link) {
+		if wiki.isUnsupportedLink(link) {
 			e.Nodes[0].Attr = append(e.Nodes[0].Attr, html.Attribute{
 				Key: "style",
 				Val: "color: gray;",
@@ -218,10 +231,10 @@ func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 
 		page := trimPageName(link)
 
-		setAttributeValue(e.Nodes[0], "href", serviceVisitUrl(page))
+		setAttributeValue(e.Nodes[0], "href", t(page))
 	}
 
-	bodySelector := getWikiInformationByUrl(wikiUrl).BodySelector
+	bodySelector := wiki.BodySelector
 
 	doc.Find(bodySelector + " a").Each(hrefRewriter)
 	doc.Find(bodySelector + " area").Each(hrefRewriter)
@@ -238,44 +251,15 @@ func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
 		return "", err
 	}
 
-	buf := bytes.NewBuffer([]byte{})
-
-	err = templates.ExecuteTemplate(buf, "wiki.html", struct {
-		Header  template.HTML
-		Content template.HTML
-	}{template.HTML(header), template.HTML(content)})
-
-	if err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
-}
-
-func GetFirstWikiParagraph(url, pageTitle string) (string, error) {
-	doc, err := goquery.NewDocument(buildWikiPageLink(url, pageTitle))
-
-	if err != nil {
-		return "", err
-	}
-
-	selections := doc.Find("#mw-content-text > p")
-
-	if selections.Length() == 0 {
-		return "", fmt.Errorf("No selections found.")
-	}
-
-	return selections.First().Text(), nil
+	return Config.PageRenderer(template.HTML(header), template.HTML(content))
 }
 
 func trimPageName(path string) string {
 	return path[len("/wiki/"):]
 }
 
-func readSupportedWikis() (map[string]Wiki, error) {
-	var wikis map[string]Wiki
-
-	file, err := ioutil.ReadFile("config/supported_wikis")
+func ReadSupportedWikis(path string) (map[string]Wiki, error) {
+	file, err := ioutil.ReadFile(path)
 
 	if err != nil {
 		return nil, err
@@ -298,8 +282,11 @@ func readSupportedWikis() (map[string]Wiki, error) {
 	return wikis, nil
 }
 
-func getWikiInformationByUrl(url string) *Wiki {
-	w := wikis[url]
+func Wikis() map[string]Wiki {
+	return wikis
+}
 
+func ByURL(url string) *Wiki {
+	w := wikis[url]
 	return &w
 }

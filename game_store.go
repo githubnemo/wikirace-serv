@@ -5,6 +5,7 @@ import (
 	_ "crypto/sha1"
 	"fmt"
 	"time"
+	"wikirace-serv/wikis"
 )
 
 var gameHasher = crypto.SHA1.New()
@@ -53,8 +54,8 @@ func (g *GameStore) gameSaveHandler(game *Game) {
 	}
 }
 
-func (g *GameStore) NewGame(hostingPlayerName string, wikiUrl string) *Game {
-	return NewGame(hostingPlayerName, wikiUrl, g.gameSaveHandler)
+func (g *GameStore) NewGame(hostingPlayerName string, wiki *wikis.Wiki) *Game {
+	return NewGame(hostingPlayerName, wiki, g.gameSaveHandler)
 }
 
 // Only one (pooled) instance of a game instance is returned.
@@ -67,7 +68,7 @@ func (g *GameStore) GetGameByHash(hash string) (*Game, error) {
 	// Create empty game, values don't matter as they'll be
 	// overwritten by GetMarshal. What matters is the initialization
 	// of private members and start of go routines and such.
-	game := g.NewGame("", "")
+	game := g.NewGame("", nil)
 
 	err := g.GetMarshal(hash, game)
 

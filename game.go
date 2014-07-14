@@ -1,6 +1,7 @@
 package main
 
 import (
+	"wikirace-serv/wikis"
 	"fmt"
 	"sort"
 	"sync"
@@ -23,12 +24,12 @@ type Game struct {
 	// The path the winner took to the goal. Empty if the game is not finished
 	WinnerPath []string
 
+	// The wiki that is used in this game
+	Wiki *wikis.Wiki
+
 	// Name of the start and goal article of this game
 	Start string
 	Goal  string
-
-	// The language of that certain Game
-	WikiUrl string
 
 	// Lock for Winner / WinnerPath
 	winnerLock sync.RWMutex
@@ -43,10 +44,10 @@ type Game struct {
 // Usually not called directly as the save handler is relevant to the
 // game store which gets notified through the saveHandler that it is time
 // to save this game.
-func NewGame(hostingPlayerName string, wikiUrl string, saveHandler func(*Game)) *Game {
+func NewGame(hostingPlayerName string, wiki *wikis.Wiki, saveHandler func(*Game)) *Game {
 	game := &Game{
 		Host:        hostingPlayerName,
-		WikiUrl:     wikiUrl,
+		Wiki:        wiki,
 		saveHandler: saveHandler,
 	}
 

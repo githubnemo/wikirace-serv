@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io"
 	"strings"
+	"bytes"
 )
 
 type MustTemplates struct {
@@ -41,4 +42,19 @@ func parseTemplates() (*MustTemplates, error) {
 	}
 
 	return &MustTemplates{tmp}, nil
+}
+
+func WikiPageRenderer(header, content template.HTML) (string, error) {
+	buf := bytes.NewBuffer([]byte{})
+
+	err := templates.ExecuteTemplate(buf, "wiki.html", struct {
+		Header  template.HTML
+		Content template.HTML
+	}{template.HTML(header), template.HTML(content)})
+
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

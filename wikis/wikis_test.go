@@ -1,4 +1,4 @@
-package main
+package wikis
 
 import (
 	"testing"
@@ -10,8 +10,10 @@ func TestResolveCorrectTitle(t *testing.T) {
 		{"http://de.wikipedia.org/wiki/CPU", "Prozessor"},
 	}
 
+	wiki := &Wiki{}
+
 	for _, e := range cases {
-		if title, err := fetchWikiPageTitle(e.URL); err != nil {
+		if title, err := wiki.PageTitle(e.URL); err != nil {
 			t.Fatal("Error while fetching page title:", err)
 		} else if title != e.Title {
 			t.Fatal("Mismatch:", title, "!=", e.Title)

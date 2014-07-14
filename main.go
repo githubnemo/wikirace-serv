@@ -11,6 +11,8 @@ import (
 	"io"
 	"os"
 	"syscall"
+
+	"wikirace-serv/wikis"
 )
 
 // Initialized in main()
@@ -120,7 +122,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 			game,
 			player,
 			game.Winner == player.Name,
-			buildWikiPageLink(game.WikiUrl, page),
+			game.Wiki.PageLink(page),
 		})
 
 		return
@@ -128,7 +130,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	game.Broadcast(NewVisitMessage(session, page, player))
 
-	ServeWikiPage(game.WikiUrl, page, w)
+	game.Wiki.ServeWikiPage(page, serviceVisitUrl, w)
 
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
@@ -147,12 +149,16 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 
 	playerName := values.Get("playerName")
 	wikiUrl := values.Get("wikiLanguage")
+	wiki := wikis.ByURL(wikiUrl)
+
+	if wiki == nil {
+		panic("No wiki found for: " + wikiUrl)
+	}
 
 	// FIXME: overwrites running game of the player
-	game := gameStore.NewGame(playerName, wikiUrl)
-	host := game.WikiUrl
+	game := gameStore.NewGame(playerName, wiki)
 
-	start, goal, err := DetermineStartAndGoal(host)
+	start, goal, err := wiki.DetermineStartAndGoal()
 
 	if err != nil {
 		panic(ErrStartAndGoal(err))
@@ -266,7 +272,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 		panic(ErrGetGame(err))
 	}
 
-	summary, err := GetFirstWikiParagraph(game.WikiUrl, game.Goal)
+	summary, err := game.Wiki.FirstParagraph(game.Goal)
 
 	if err != nil {
 		summary = err.Error()
@@ -291,7 +297,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 
 // Serves initial page
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	templates.ExecuteTemplate(w, "index.html", wikis)
+	templates.ExecuteTemplate(w, "index.html", wikis.Wikis())
 }
 
 func reloadHandler(w http.ResponseWriter, r *http.Request) {
@@ -352,6 +358,14 @@ func setupPageCipher() (*PageCipher, error) {
 
 func main() {
 	var err error
+
+	_, err = wikis.ReadSupportedWikis("config/supported_wikis")
+
+	wikis.Config.PageRenderer = WikiPageRenderer
+
+	if err != nil {
+		log.Fatal("Error reading wikis:", err)
+	}
 
 	session = NewGameSessionStore()
 
