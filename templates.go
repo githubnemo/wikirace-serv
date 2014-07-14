@@ -44,6 +44,7 @@ func parseTemplates() (*MustTemplates, error) {
 	return &MustTemplates{tmp}, nil
 }
 
+// Passed to the wikis package to render the wiki page in wiki.ServePage().
 func WikiPageRenderer(header, content template.HTML) (string, error) {
 	buf := bytes.NewBuffer([]byte{})
 

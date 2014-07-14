@@ -130,7 +130,7 @@ func visitHandler(w http.ResponseWriter, r *http.Request) {
 
 	game.Broadcast(NewVisitMessage(session, page, player))
 
-	game.Wiki.ServeWikiPage(page, serviceVisitUrl, w)
+	game.Wiki.ServeWikiPage(page, w)
 
 	fmt.Fprintf(w, "Session dump: %#v\n", session.Values)
 	fmt.Fprintf(w, "Game dump: %#v\n", game)
@@ -359,9 +359,10 @@ func setupPageCipher() (*PageCipher, error) {
 func main() {
 	var err error
 
-	_, err = wikis.ReadSupportedWikis("config/supported_wikis")
+	err = wikis.ReadSupportedWikis("config/supported_wikis")
 
 	wikis.Config.PageRenderer = WikiPageRenderer
+	wikis.Config.PageTranslator = serviceVisitUrl
 
 	if err != nil {
 		log.Fatal("Error reading wikis:", err)
