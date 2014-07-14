@@ -49,8 +49,20 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 }
 
 
+// Model of a wiki host.
 type Wiki struct {
-	Name, URL, RandomPage, BodySelector string
+	// Name of the wiki that can be displayed to the user.
+	Name string
+
+	// Absolute URL to the root directory of the wiki.
+	URL string
+
+	// Name of the page that redirects to a random page in the wiki.
+	// Wiki softwares like mediawiki provide such a page.
+	RandomPage string
+
+	// The CSS selector that points to the content of the wiki page.
+	BodySelector string
 }
 
 // Generate a full HTTP link to the given page on this wiki.
@@ -234,7 +246,7 @@ func (wiki *Wiki) rewriteWikiURLs(doc *goquery.Document) (string, error) {
 			return
 		}
 
-		page := trimPageName(link)
+		page := wiki.pageNameFromRelativeLink(link)
 
 		setAttributeValue(e.Nodes[0], "href", Config.PageTranslator(page))
 	}
@@ -259,10 +271,17 @@ func (wiki *Wiki) rewriteWikiURLs(doc *goquery.Document) (string, error) {
 	return Config.PageRenderer(template.HTML(header), template.HTML(content))
 }
 
-func trimPageName(path string) string {
+// Extract the page name from the supplied relative link.
+func (wiki *Wiki) pageNameFromRelativeLink(path string) string {
 	return path[len("/wiki/"):]
 }
 
+// The different Wiki configurations are stored in a separate configuration
+// file so that the different aspects, such as the RandomPage, can be
+// confgured separately.
+//
+// This function reads such a config file and loads the available wikis to
+// memory. These can then be read using the Wikis() function.
 func ReadSupportedWikis(path string) error {
 	file, err := ioutil.ReadFile(path)
 
