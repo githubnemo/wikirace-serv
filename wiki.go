@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/go.net/html"
+	"code.google.com/p/go.net/html/atom"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -51,14 +52,13 @@ func setAttributeValue(n *html.Node, attrName, value string) error {
 	return nil
 }
 
-
-
 func buildWikiPageLink(url, page string) string {
 	return url + "/wiki/" + page
 }
 
 func ServeWikiPage(url, page string, w http.ResponseWriter) {
 	doc, err := goquery.NewDocument(buildWikiPageLink(url, page))
+	addCSSOverride(doc)
 
 	if err != nil {
 		panic(err)
@@ -170,6 +170,24 @@ func removeLinksFromImages(doc *goquery.Document, wikiUrl string) {
 
 func isUnsupportedLink(link string) bool {
 	return !strings.HasPrefix(link, "/wiki/") || strings.Contains(link, ":")
+}
+
+func addCSSOverride(doc *goquery.Document) {
+	s := "<link rel='stylesheet' type='text/css' href='css/wiki_overrides.css'>"
+
+	// see: http://stackoverflow.com/questions/15081119/any-way-to-use-html-parse-without-it-adding-nodes-to-make-a-well-formed-tree
+	newCssNode, err := html.ParseFragment(strings.NewReader(s), &html.Node{
+		Type:     html.ElementNode,
+		Data:     "body",
+		DataAtom: atom.Body,
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	originalNode := doc.Find("head").Get(0)
+	originalNode.AppendChild(newCssNode[0])
 }
 
 func rewriteWikiUrls(doc *goquery.Document, wikiUrl string) (string, error) {
