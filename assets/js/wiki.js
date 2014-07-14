@@ -20,6 +20,16 @@ $(document).ready(function() {
 		return $('<li data-player="'+name+'">'+name+' <span class="badge visits"></span></li>');
 	}
 
+	function addBadge(playerName, badgeTemplateSelector) {
+		var $player = findPlayerElement(playerName);
+
+		$player.find(".visits").addBefore($(badgeTemplateSelector).copy());
+	}
+
+	function removeBadge(playerName, badgeTemplateSelector) {
+		findPlayerElement(playerName).find(badgeTemplateSelector).remove();
+	}
+
 	function findPlayerElement(name) {
 		return getPlayerList().find("li").filter(function() {
 			return $(this).data("player") == name;
