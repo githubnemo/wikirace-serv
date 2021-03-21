@@ -2,7 +2,7 @@ package main
 
 import (
 	"testing"
-	"wikirace-serv/wikis"
+	"github.com/githubnemo/wikirace-serv/wikis"
 )
 
 func TestGameHasOwnerAsPlayer(t *testing.T) {
