@@ -5,7 +5,8 @@ import (
 	_ "crypto/sha1"
 	"fmt"
 	"time"
-	"wikirace-serv/wikis"
+
+	"github.com/githubnemo/wikirace-serv/wikis"
 )
 
 var gameHasher = crypto.SHA1.New()

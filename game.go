@@ -1,10 +1,11 @@
 package main
 
 import (
-	"wikirace-serv/wikis"
 	"fmt"
 	"sort"
 	"sync"
+
+	"github.com/githubnemo/wikirace-serv/wikis"
 )
 
 type Game struct {
