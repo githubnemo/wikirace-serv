@@ -46,7 +46,7 @@ func (g *Store) GetMarshal(hash string, v interface{}) error {
 }
 
 func (g *Store) Contains(hash string) bool {
-	for key := range g.Keys() {
+	for key := range g.Keys(nil) {
 		if key == hash {
 			return true
 		}

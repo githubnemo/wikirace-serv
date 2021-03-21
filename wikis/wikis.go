@@ -2,8 +2,8 @@ package wikis
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/html"
-	"code.google.com/p/go.net/html/atom"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -142,7 +142,7 @@ func (wiki *Wiki) FirstParagraph(pageTitle string) (string, error) {
 		return "", err
 	}
 
-	selections := doc.Find("#mw-content-text > p")
+	selections := doc.Find("#mw-content-text .mw-parser-output > p")
 
 	if selections.Length() == 0 {
 		return "", fmt.Errorf("No selections found.")
