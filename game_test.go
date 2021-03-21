@@ -93,3 +93,35 @@ func TestWinnerSimple(t *testing.T) {
 		t.Errorf("player2: winner: %t, temporary: %t, expected both true", isWinner, isTempWinner)
 	}
 }
+
+func TestTemporaryWinnerOvertakingSimple(t *testing.T) {
+	game := simpleTwoPlayerGame()
+
+	player1 := &game.Players[0]
+	player2 := &game.Players[1]
+
+	// player1 jumped to the goal page via 1 page in between
+	// and is the temporary winner
+	player1.Visited("other page")
+	player1.Visited(game.Goal)
+
+	isWinner, isTempWinner := game.EvaluateWinner(player1)
+	if isWinner || !isTempWinner {
+		t.Errorf("player1: winner: %t, temporary: %t, expected (false, true)", isWinner, isTempWinner)
+	}
+
+	// now player2 gets his shit together and jumps directly
+	// to the goal page, having a shorter path than the temporary
+	// winner, player2 is the absolute winner and player1 loses.
+	player2.Visited(game.Goal)
+
+	isWinner, isTempWinner = game.EvaluateWinner(player1)
+	if isWinner || isTempWinner {
+		t.Errorf("player1: winner: %t, temporary: %t, expected both false", isWinner, isTempWinner)
+	}
+
+	isWinner, isTempWinner = game.EvaluateWinner(player2)
+	if !isWinner {
+		t.Errorf("player2: winner: %t, temporary: %t, expected both true", isWinner, isTempWinner)
+	}
+}
