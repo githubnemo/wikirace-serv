@@ -6,13 +6,14 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 
 	"crypto/rand"
 	"io"
 	"os"
 	"syscall"
 
-	"wikirace-serv/wikis"
+	"github.com/githubnemo/wikirace-serv/wikis"
 )
 
 // Initialized in main()
@@ -188,33 +189,44 @@ func startHandler(w http.ResponseWriter, r *http.Request) {
 func joinHandler(w http.ResponseWriter, r *http.Request) {
 	values := mustParseQuery(r.URL.RawQuery)
 
+	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
+	w.Header().Set("Expires", time.Unix(0, 0).Format(http.TimeFormat))
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("X-Accel-Expires", "0")
+
 	gameId := values.Get("id")
 	playerName := values.Get("name")
+	log.Println("gameid", gameId, "playername", playerName)
 
 	if len(gameId) == 0 {
 		// Just some lost sould trying to get a game starting, redirect
 		// him to the start page.
+		log.Println("someone tried to join a game that's not running, redirecting him to /")
 		http.Redirect(w, r, "/", 301)
 		return
 	}
 
 	if len(playerName) == 0 {
 		templates.ExecuteTemplate(w, "join.html", gameId)
+		log.Println("someone tried to join a game without a playername")
 		return
 	}
 
 	// Check if game really exists
 	if !gameStore.Contains(gameId) {
+		log.Println("there was a game that was not found")
 		panic(ErrNoSuchGame(gameId))
 	}
 
 	game, err := gameStore.GetGameByHash(gameId)
 
 	if err != nil {
+		log.Println(err.Error())
 		panic(err)
 	}
 
 	if err := game.CanJoin(playerName); err != nil {
+		log.Println(err.Error())
 		panic(err)
 	}
 
@@ -225,11 +237,19 @@ func joinHandler(w http.ResponseWriter, r *http.Request) {
 
 	game.AddPlayer(playerName)
 
+	log.Println("all good, trying to redirect to game", gameId)
 	http.Redirect(w, r, "/game?id="+gameId, 301)
 }
 
 // Serve game content
 func gameHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("hi na?")
+
+	w.Header().Set("Cache-Control", "no-cache, private, max-age=0")
+	w.Header().Set("Expires", time.Unix(0, 0).Format(http.TimeFormat))
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("X-Accel-Expires", "0")
+
 	session := mustGetGameSession(r)
 	values := mustParseQuery(r.URL.RawQuery)
 	gameId := values.Get("id")
@@ -256,12 +276,14 @@ func gameHandler(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Game with hash %s was requested by %#v but not found on disk!", gameId, session)
 			}
 
+			log.Println("invalidating session")
 			session.Invalidate()
 		}
 	}
 
 	// Handle a new player
 	if !session.IsInitialized() {
+		log.Println("a session for a player was not initalized although it shoudl've been")
 		http.Redirect(w, r, "/join?"+r.URL.RawQuery, 301)
 		return
 	}
