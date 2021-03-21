@@ -2,8 +2,8 @@ package wikis
 
 import (
 	"bytes"
-	"code.google.com/p/go.net/html"
-	"code.google.com/p/go.net/html/atom"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
