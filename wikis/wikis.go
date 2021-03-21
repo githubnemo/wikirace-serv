@@ -142,7 +142,7 @@ func (wiki *Wiki) FirstParagraph(pageTitle string) (string, error) {
 		return "", err
 	}
 
-	selections := doc.Find("#mw-content-text > p")
+	selections := doc.Find("#mw-content-text .mw-parser-output > p")
 
 	if selections.Length() == 0 {
 		return "", fmt.Errorf("No selections found.")
